@@ -17,12 +17,18 @@
 #include <ucr/bit.h>
 #include <ucr/timer.h>
 #include <stdio.h>
+//need time.h
 
+//srand(time(0));
 unsigned char matrixRowPosition;
 unsigned char matrixColPosition;
 unsigned char rTemp;
 unsigned char cTemp;
 unsigned char x, keyVal;//for keypad functions
+unsigned char fruitGone;
+unsigned char fruitRow;
+unsigned char fruitCol;
+
 
 typedef struct _Snake
 {
@@ -54,6 +60,7 @@ typedef struct _task {
 	unsigned long int elapsedTime;
 	int (*TickFct) (int);
 } task;
+
 
 enum dir_states{up,down,left,right,reset} dir;
 
@@ -142,6 +149,70 @@ void UpdateSnakePos()
 			(snakeBody[0].colPos) = ~(0x10);
 			snakeHead = snakeBody[0];
 			snakeTail = snakeBody[0];
+			break;
+		}
+	}
+}
+
+enum Fruit_States{fresh,devoured} Fruit_Status;
+
+void GenerateFruit()
+{
+	switch(Fruit_Status)
+	{
+		case -1:
+		{
+			fruitRow = 0x01 << (rand() % 8);
+			fruitCol = 0x01 << (rand() % 8);
+			fruitGone = 0;
+			Fruit_Status = fresh;
+			break;
+		}
+		case fresh:
+		{
+			if(fruitGone)
+			{
+				Fruit_Status = devoured;
+			}
+			break;
+		}
+		case devoured:
+		{
+			if(!fruitGone)
+			{
+				Fruit_Status = fresh;
+			}
+			break;
+		}
+		default:
+		{
+			fruitRow = 0x01 << (rand() % 8);
+			fruitCol = 0x01 << (rand() % 8);
+			fruitGone = 0;
+			Fruit_Status = fresh;
+			break;
+		}
+	}
+	
+	switch(Fruit_States)
+	{
+		case fresh:
+		{
+			break;
+		}
+		case devoured:
+		{
+			fruitRow = 0x01 << (rand() % 8);
+			fruitCol = 0x01 << (rand() % 8);
+			fruitGone = 0;
+			break;
+		}
+		default:
+		{
+			fruitRow = 0x01 << (rand() % 8);
+			fruitCol = 0x01 << (rand() % 8);
+			fruitGone = 0;
+			Fruit_Status = fresh;
 			break;
 		}
 	}
