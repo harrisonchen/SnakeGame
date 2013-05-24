@@ -1,5 +1,5 @@
-/*  SnakeGame.c - $date$
- *	Name & E-mail: Harrison Chen hchen030@ucr.edu
+/*	SnakeGame.c - $date$
+ *	Name & E-mail:  - 
  *	CS Login: 
  *	Partner(s) Name & E-mail:  - 
  *	Lab Section: 
@@ -21,7 +21,7 @@ unsigned char cTemp;
 
 enum dir_states{up,down,left,right} dir;
 
-void UpdateRowPos(unsigned char dir)
+void UpdatePosition(unsigned char dir)
 {
 	switch(dir)
 	{
@@ -29,6 +29,7 @@ void UpdateRowPos(unsigned char dir)
 		{
 			MatrixRowPosition = 0x08;
 			MatrixColPosition = 0x10;
+			break;
 		}
 		case up:
 		{
@@ -41,6 +42,7 @@ void UpdateRowPos(unsigned char dir)
 			{
 				MatrixRowPosition = cTemp;
 			}
+			break;
 		}
 		case down:
 		{
@@ -53,6 +55,7 @@ void UpdateRowPos(unsigned char dir)
 			{
 				MatrixRowPosition = cTemp;
 			}
+			break;
 		}
 		case left:
 		{
@@ -65,6 +68,7 @@ void UpdateRowPos(unsigned char dir)
 			{
 				MatrixColPosition = cTemp;
 			}
+			break;
 		}
 		case right:
 		{
@@ -77,13 +81,25 @@ void UpdateRowPos(unsigned char dir)
 			{
 				MatrixColPosition = cTemp;
 			}
+			break;
+		}
+		default:
+		{
+			MatrixRowPosition = 0x08;
+			MatrixColPosition = 0x10;
+			break;
 		}
 	}
 }
 
+void KeypadPress()
+{
+	
+}
+
 void LoseGame()
 {
-	break;
+	
 }
 
 int main(void)
