@@ -26,13 +26,14 @@ unsigned char x, keyVal;//for keypad functions
 
 typedef struct _Snake
 {
-	unsigned char headRow;
-	unsigned char headCol;
-	unsigned char tailRow;
-	unsigned char tailCol;
+	unsigned char rowPos;
+	unsigned char colPos;
+	unsigned char size;
 } Snake;
 
 Snake snakeBody[64];
+Snake snakeHead;
+Snake snakeTail;
 
 unsigned long int findGCD(unsigned long int a, unsigned long int b)
 {
@@ -66,78 +67,81 @@ void UpdateSnakePos()
 	{
 		case -1:
 		{
-			(snakeBody[0].headRow) = 0x08;
-			(snakeBody[0].tailRow) = 0x08;
-			(snakeBody[0].headCol) = ~(0x10);
-			(snakeBody[0].tailCol) = ~(0x10);
+			snakeBody->size = 1;
+			(snakeBody[0].rowPos) = 0x08;
+			(snakeBody[0].colPos) = ~(0x10);
+			snakeHead = snakeBody[0];
+			snakeTail = snakeBody[0];
 			break;
 		}
 		case up:
 		{
-			rTemp = (snakeBody[0].headRow) << 1;
+			rTemp = (snakeBody[0].rowPos) << 1;
 			if(rTemp == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].headRow) = rTemp;
+				(snakeBody[0].rowPos) = rTemp;
 			}
 			break;
 		}
 		case down:
 		{
-			rTemp = (snakeBody[0].headRow) >> 1;
+			rTemp = (snakeBody[0].rowPos) >> 1;
 			if(rTemp == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].headRow) = rTemp;
+				(snakeBody[0].rowPos) = rTemp;
 			}
 			break;
 		}
 		case left:
 		{
-			cTemp = (~(snakeBody[0].headCol)&0xFF) >> 1;
+			cTemp = (~(snakeBody[0].colPos)&0xFF) >> 1;
 			if(cTemp == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].headCol) = ~cTemp;
+				(snakeBody[0].colPos) = ~cTemp;
 			}
 			break;
 		}
 		case right:
 		{
-			cTemp = (~(snakeBody[0].headCol)&0xFF) << 1;
+			cTemp = (~(snakeBody[0].colPos)&0xFF) << 1;
 			if(cTemp == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].headCol) = ~cTemp;
+				(snakeBody[0].colPos) = ~cTemp;
 			}
 			break;
 		}
 		case reset:
 		{
-			(snakeBody[0].headRow) = 0x08;
-			(snakeBody[0].tailRow) = 0x08;
-			(snakeBody[0].headCol) = ~(0x10);
-			(snakeBody[0].tailCol) = ~(0x10);
+			snakeBody->size = 1;
+			(snakeBody[0].rowPos) = 0x08;
+			(snakeBody[0].colPos) = ~(0x10);
+			snakeHead = snakeBody[0];
+			snakeTail = snakeBody[0];
 			break;
 		}
 		default:
 		{
-			(snakeBody[0].headRow) = 0x08;
-			(snakeBody[0].tailRow) = 0x08;
-			(snakeBody[0].headCol) = ~(0x10);
-			(snakeBody[0].tailCol) = ~(0x10);
+			snakeBody->size = 1;
+			(snakeBody[0].rowPos) = 0x08;
+			(snakeBody[0].colPos) = ~(0x10);
+			snakeHead = snakeBody[0];
+			snakeTail = snakeBody[0];
 			break;
 		}
 	}
@@ -145,8 +149,11 @@ void UpdateSnakePos()
 
 void UpdateMatrix()
 {
-	transmit_dataB1(snakeBody[0].headCol);
-	transmit_dataA1(snakeBody[0].headRow);
+	for(int i = 0; i < (snakeBody->size); ++i)
+	{
+		transmit_dataB1(snakeBody[0].colPos);
+		transmit_dataA1(snakeBody[0].rowPos);
+	}		
 }
 
 void transmit_dataA1(unsigned char data) //transmit 8bits using PORTA 0 to 3
