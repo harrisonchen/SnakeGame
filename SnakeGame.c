@@ -1,5 +1,5 @@
 /*  SnakeGame.c - $date$
- *	Name & E-mail:  - 
+ *	Name & E-mail: Harrison Chen hchen030@ucr.edu
  *	CS Login: 
  *	Partner(s) Name & E-mail:  - 
  *	Lab Section: 
