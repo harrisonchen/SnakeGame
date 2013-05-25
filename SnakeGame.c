@@ -38,9 +38,10 @@ typedef struct _Snake
 } Snake;
 
 Snake snakeBody[64];
-Snake snakeBodyTemp[64];
+Snake snakeBodyTemp[64]; //for array adjustment function copy
 Snake snakeHead;
 Snake snakeTail;
+Snake snakeHold; //for shifting snake position array
 
 unsigned long int findGCD(unsigned long int a, unsigned long int b)
 {
@@ -76,6 +77,24 @@ void SnakeArrayAdj()
 		snakeBody[j] = snakeBodyTemp[j];
 		(snakeBody->size) += 1;
 	}
+}
+
+void SnakeShiftX()
+{
+	(snakeBody->size)++;
+	snakeHold = snakeHead;
+	snakeHead.rowPos = rNext;
+	snakeTail = snakeBody[(snakeBody->size) - 2];
+	SnakeArrayAdj();
+}
+
+void SnakeShiftY()
+{
+	(snakeBody->size)++;
+	snakeHold = snakeHead;
+	snakeHead.colPos = cNext;
+	snakeTail = snakeBody[(snakeBody->size) - 2];
+	SnakeArrayAdj();
 }
 
 enum dir_states{up,down,left,right,reset} dir;
