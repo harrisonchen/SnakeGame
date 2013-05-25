@@ -38,8 +38,25 @@ typedef struct _Snake
 } Snake;
 
 Snake snakeBody[64];
+Snake snakeBodyTemp[64];
 Snake snakeHead;
 Snake snakeTail;
+
+void SnakeArrayAdj()
+{
+	snakeBodyTemp[0] = snakeHead;
+	for(int i = 1; i < (snakeBody->size); ++i)
+	{
+		snakeBodyTemp[i] = snakeBody[i - 1];
+		(snakeBodyTemp->size) += 1;
+	}
+	(snakeBody->size) = 0;
+	for(int j = 0; j < (snakeBodyTemp->size); ++j)
+	{
+		snakeBody[j] = snakeBodyTemp[j];
+		(snakeBody->size) += 1;
+	}	
+}
 
 unsigned long int findGCD(unsigned long int a, unsigned long int b)
 {
@@ -194,7 +211,7 @@ void GenerateFruit()
 		}
 	}
 	
-	switch(Fruit_States)
+	switch(Fruit_Status)
 	{
 		case fresh:
 		{
