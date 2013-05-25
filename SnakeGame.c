@@ -22,8 +22,8 @@
 //srand(time(0));
 unsigned char matrixRowPosition;
 unsigned char matrixColPosition;
-unsigned char rTemp;
-unsigned char cTemp;
+unsigned char rNext;
+unsigned char cNext;
 unsigned char x, keyVal;//for keypad functions
 unsigned char fruitGone;
 unsigned char fruitRow;
@@ -41,22 +41,6 @@ Snake snakeBody[64];
 Snake snakeBodyTemp[64];
 Snake snakeHead;
 Snake snakeTail;
-
-void SnakeArrayAdj()
-{
-	snakeBodyTemp[0] = snakeHead;
-	for(int i = 1; i < (snakeBody->size); ++i)
-	{
-		snakeBodyTemp[i] = snakeBody[i - 1];
-		(snakeBodyTemp->size) += 1;
-	}
-	(snakeBody->size) = 0;
-	for(int j = 0; j < (snakeBodyTemp->size); ++j)
-	{
-		snakeBody[j] = snakeBodyTemp[j];
-		(snakeBody->size) += 1;
-	}	
-}
 
 unsigned long int findGCD(unsigned long int a, unsigned long int b)
 {
@@ -78,6 +62,21 @@ typedef struct _task {
 	int (*TickFct) (int);
 } task;
 
+void SnakeArrayAdj()
+{
+	snakeBodyTemp[0] = snakeHead;
+	for(int i = 1; i < (snakeBody->size); ++i)
+	{
+		snakeBodyTemp[i] = snakeBody[i - 1];
+		(snakeBodyTemp->size) += 1;
+	}
+	(snakeBody->size) = 0;
+	for(int j = 0; j < (snakeBodyTemp->size); ++j)
+	{
+		snakeBody[j] = snakeBodyTemp[j];
+		(snakeBody->size) += 1;
+	}
+}
 
 enum dir_states{up,down,left,right,reset} dir;
 
@@ -100,53 +99,53 @@ void UpdateSnakePos()
 		}
 		case up:
 		{
-			rTemp = (snakeBody[0].rowPos) << 1;
-			if(rTemp == 0x00)
+			rNext = (snakeBody[0].rowPos) << 1;
+			if(rNext == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].rowPos) = rTemp;
+				(snakeBody[0].rowPos) = rNext;
 			}
 			break;
 		}
 		case down:
 		{
-			rTemp = (snakeBody[0].rowPos) >> 1;
-			if(rTemp == 0x00)
+			rNext = (snakeBody[0].rowPos) >> 1;
+			if(rNext == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].rowPos) = rTemp;
+				(snakeBody[0].rowPos) = rNext;
 			}
 			break;
 		}
 		case left:
 		{
-			cTemp = (~(snakeBody[0].colPos)&0xFF) >> 1;
-			if(cTemp == 0x00)
+			cNext = (~(snakeBody[0].colPos)&0xFF) >> 1;
+			if(cNext == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].colPos) = ~cTemp;
+				(snakeBody[0].colPos) = ~cNext;
 			}
 			break;
 		}
 		case right:
 		{
-			cTemp = (~(snakeBody[0].colPos)&0xFF) << 1;
-			if(cTemp == 0x00)
+			cNext = (~(snakeBody[0].colPos)&0xFF) << 1;
+			if(cNext == 0x00)
 			{
 				LoseGame();
 			}
 			else
 			{
-				(snakeBody[0].colPos) = ~cTemp;
+				(snakeBody[0].colPos) = ~cNext;
 			}
 			break;
 		}
