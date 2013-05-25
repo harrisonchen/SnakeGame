@@ -1,4 +1,4 @@
-/*  hchen030_lab8_LCD.c - $date$
+/*	hchen030_lab8_LCD.c - $date$
  *	Name & E-mail:  - 
  *	CS Login: 
  *	Partner(s) Name & E-mail:  - 
@@ -16,6 +16,8 @@
 #include <ucr/bit.h>
 #include <ucr/timer.h>
 #include <stdio.h>
+
+unsigned char LCD_counter;
 
 unsigned long int findGCD(unsigned long int a, unsigned long int b) {
 	unsigned long int c;
@@ -204,6 +206,7 @@ void LT_Tick() {
 	static unsigned char i, x, c;
 	switch(LT_State) { // Transitions
 		case -1:
+			LCD_counter = 74;
 			LT_State = LT_s0;
 			break;
 		case LT_s0:
@@ -218,10 +221,11 @@ void LT_Tick() {
 			}
 			break;
 		case LT_WaitButton:
-			if (GetBit(PINA,0)==1) {
+			if (LCD_counter < 75) {
 				LT_State = LT_WaitButton;
+				LCD_counter++;
 			}
-			else if (GetBit(PINA,0)==0) { // Button active low
+			else if (!(LCD_counter < 75)) { // Button active low
 				LT_State = LT_FillAndDispString;
 			}
 			break;
@@ -233,14 +237,16 @@ void LT_Tick() {
 		 	LT_State = LT_WaitBtnRelease;
 			break;
 		case LT_WaitBtnRelease:
-			if (GetBit(PINA,0)==0) { // Wait for button release
-				LT_State = LT_WaitBtnRelease;
-			}
-			else if (GetBit(PINA,0)==1) {
+			//if (GetBit(PINA,0)==0) { // Wait for button release
+				//LT_State = LT_WaitBtnRelease;
+			//}
+			//else if (GetBit(PINA,0)==1) {
+				LCD_counter = 0;
 				LT_State = LT_WaitLcdRdy;
-			}
+			//}
 			break;
 		default:
+			LCD_counter =74;
 			LT_State = LT_s0;
 		} // Transitions
 
