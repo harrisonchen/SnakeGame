@@ -17,9 +17,7 @@
 #include <ucr/bit.h>
 #include <ucr/timer.h>
 #include <stdio.h>
-//need time.h
 
-//srand(time(0));
 unsigned char matrixRowPosition;
 unsigned char matrixColPosition;
 unsigned char rNext;
@@ -28,6 +26,7 @@ unsigned char x, keyVal;//for keypad functions
 unsigned char fruitGone;
 unsigned char fruitRow;
 unsigned char fruitCol;
+unsigned char change;//seed for random function. it gets incremented.
 
 
 typedef struct _Snake
@@ -197,8 +196,11 @@ void GenerateFruit()
 	{
 		case -1:
 		{
-			fruitRow = 0x01 << (rand() % 8);
-			fruitCol = 0x01 << (rand() % 8);
+			change = 0;
+			fruitRow = 0x01 << (rand(change) % 8);
+			fruitCol = ~(0x01 << (rand(change) % 8));
+			transmit_dataA1(fruitRow);
+			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			Fruit_Status = fresh;
 			break;
@@ -221,8 +223,11 @@ void GenerateFruit()
 		}
 		default:
 		{
-			fruitRow = 0x01 << (rand() % 8);
-			fruitCol = 0x01 << (rand() % 8);
+			change = 0;
+			fruitRow = 0x01 << (rand(change) % 8);
+			fruitCol = ~(0x01 << (rand(change) % 8));
+			transmit_dataA1(fruitRow);
+			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			Fruit_Status = fresh;
 			break;
@@ -237,15 +242,21 @@ void GenerateFruit()
 		}
 		case devoured:
 		{
-			fruitRow = 0x01 << (rand() % 8);
-			fruitCol = 0x01 << (rand() % 8);
+			change++;
+			fruitRow = 0x01 << (rand(change) % 8);
+			fruitCol = ~(0x01 << (rand(change) % 8));
+			transmit_dataA1(fruitRow);
+			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			break;
 		}
 		default:
 		{
-			fruitRow = 0x01 << (rand() % 8);
-			fruitCol = 0x01 << (rand() % 8);
+			change = 0;
+			fruitRow = 0x01 << (rand(change) % 8);
+			fruitCol = ~(0x01 << (rand(change) % 8));
+			transmit_dataA1(fruitRow);
+			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			Fruit_Status = fresh;
 			break;
