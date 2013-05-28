@@ -1,9 +1,9 @@
 /*	SnakeGame.c - $date$
- *	Name & E-mail:  - 
- *	CS Login: 
- *	Partner(s) Name & E-mail:  - 
- *	Lab Section: 
- *	Assignment: Lab #  Exercise # 
+ *	Name & E-mail:  - Harrison Chen hchen030@ucr.edu
+ *	CS Login: hchen030
+ *	Partner(s) Name & E-mail:  -  Patrick Ly-Vo plyvo001@ucr.edu
+ *	Lab Section: 22
+ *	Assignment: Lab #  Exercise #
  *	Exercise Description:
  *	
  *	
@@ -64,35 +64,47 @@ typedef struct _task {
 
 void SnakeArrayAdj()
 {
-	snakeBodyTemp[0] = snakeHead;
+	(snakeBodyTemp->size) = 1;
+	(snakeBodyTemp[0].rowPos) = (snakeHead.rowPos);
+	(snakeBodyTemp[0].colPos) = (snakeHead.colPos);
 	for(int i = 1; i < (snakeBody->size); ++i)
 	{
-		snakeBodyTemp[i] = snakeBody[i - 1];
+		snakeBodyTemp[i].rowPos = snakeBody[i - 1].rowPos;
+		snakeBodyTemp[i].colPos = snakeBody[i - 1].colPos;
 		(snakeBodyTemp->size) += 1;
 	}
 	(snakeBody->size) = 0;
 	for(int j = 0; j < (snakeBodyTemp->size); ++j)
 	{
-		snakeBody[j] = snakeBodyTemp[j];
+		snakeBody[j].rowPos = snakeBodyTemp[j].rowPos;
+		snakeBody[j].colPos = snakeBodyTemp[j].colPos;
 		(snakeBody->size) += 1;
 	}
 }
 
-void SnakeShiftX()
+void SnakeShiftY()
 {
-	(snakeBody->size)++;
-	snakeHold = snakeHead;
 	snakeHead.rowPos = rNext;
-	snakeTail = snakeBody[(snakeBody->size) - 2];
 	SnakeArrayAdj();
 }
 
-void SnakeShiftY()
+void SnakeShiftX()
+{
+	snakeHead.colPos = cNext;
+	SnakeArrayAdj();
+}
+
+void SnakeShiftGrowY()
 {
 	(snakeBody->size)++;
-	snakeHold = snakeHead;
+	snakeHead.rowPos = rNext;
+	SnakeArrayAdj();
+}
+
+void SnakeShiftGrowX()
+{
+	(snakeBody->size)++;
 	snakeHead.colPos = cNext;
-	snakeTail = snakeBody[(snakeBody->size) - 2];
 	SnakeArrayAdj();
 }
 
@@ -108,11 +120,10 @@ void UpdateSnakePos()
 	{
 		case -1:
 		{
-			snakeBody->size = 1;
+			(snakeBody->size) = 1;
 			(snakeBody[0].rowPos) = 0x08;
 			(snakeBody[0].colPos) = ~(0x10);
 			snakeHead = snakeBody[0];
-			snakeTail = snakeBody[0];
 			break;
 		}
 		case up:
@@ -124,7 +135,7 @@ void UpdateSnakePos()
 			}
 			else
 			{
-				(snakeBody[0].rowPos) = rNext;
+				SnakeShiftY();
 			}
 			break;
 		}
@@ -137,7 +148,7 @@ void UpdateSnakePos()
 			}
 			else
 			{
-				(snakeBody[0].rowPos) = rNext;
+				SnakeShiftY();
 			}
 			break;
 		}
@@ -150,7 +161,8 @@ void UpdateSnakePos()
 			}
 			else
 			{
-				(snakeBody[0].colPos) = ~cNext;
+				cNext = ~cNext;
+				SnakeShiftX();
 			}
 			break;
 		}
@@ -163,26 +175,25 @@ void UpdateSnakePos()
 			}
 			else
 			{
-				(snakeBody[0].colPos) = ~cNext;
+				cNext = ~cNext;
+				SnakeShiftX();
 			}
 			break;
 		}
 		case reset:
 		{
-			snakeBody->size = 1;
+			(snakeBody->size) = 1;
 			(snakeBody[0].rowPos) = 0x08;
 			(snakeBody[0].colPos) = ~(0x10);
 			snakeHead = snakeBody[0];
-			snakeTail = snakeBody[0];
 			break;
 		}
 		default:
 		{
-			snakeBody->size = 1;
+			(snakeBody->size) = 1;
 			(snakeBody[0].rowPos) = 0x08;
 			(snakeBody[0].colPos) = ~(0x10);
 			snakeHead = snakeBody[0];
-			snakeTail = snakeBody[0];
 			break;
 		}
 	}
@@ -301,7 +312,7 @@ void transmit_dataB1(unsigned char data)
 
 enum GameStates{updateSnakePos, updateMatrix} GameState;
 
-void GameOfSnake()
+void GameOfSnakeEasy()
 {
 	switch(GameState)
 	{
@@ -453,8 +464,33 @@ void GetKeyPress()
 }
 
 void LoseGame()
-{
-	
+{/*
+	transmit_dataA1(0xFF);
+	transmit_dataB1(~(0xFF));
+	switch(dir)
+	{
+		case up:
+		{
+			
+			break;
+		}
+		case down:
+		{
+			break;
+		}
+		case left:
+		{
+			break;
+		}
+		case right:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}*/
 }
 
 int main(void)
@@ -465,7 +501,7 @@ int main(void)
 	
 	//period for the tasks
 	unsigned long int Keypad_per = 50;
-	unsigned long int GameOfSnake_per = 200;
+	unsigned long int GameOfSnakeEasy_per = 200;
 	
 	//Calculating GCD
 	unsigned long int tmpGCD = 1;
@@ -476,7 +512,7 @@ int main(void)
 	
 	//Recalculate GCd periods for scheduler
 	unsigned long int Keypad_period = Keypad_per/GCD;
-	unsigned long int GameOfSnake_period = GameOfSnake_per/GCD;
+	unsigned long int GameOfSnakeEasy_period = GameOfSnakeEasy_per/GCD;
 	
 	//Declare an array of tasks
 	static task task1, task2;
@@ -491,9 +527,9 @@ int main(void)
 
 	//Task 2
 	task2.state = -1;
-	task2.period = GameOfSnake_period;
-	task2.elapsedTime = GameOfSnake_period;
-	task2.TickFct = &GameOfSnake;
+	task2.period = GameOfSnakeEasy_period;
+	task2.elapsedTime = GameOfSnakeEasy_period;
+	task2.TickFct = &GameOfSnakeEasy;
 
 	TimerSet(GCD);
 	TimerOn();
