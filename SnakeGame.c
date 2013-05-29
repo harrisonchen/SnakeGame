@@ -265,6 +265,18 @@ void UpdateSnakePos()
 	}
 }
 
+int isSnakeThere()
+{
+	for(int i = 0; i < (snakeBody->size); ++i)
+	{
+		if( ((fruitRow&0xFF) == (snakeBody[i].rowPos&0xFF)) && ((fruitCol&0xFF) == (snakeBody[i].colPos&0xFF)) )
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 enum Fruit_States{fresh,devoured} Fruit_Status;
 
 void GenerateFruit()
@@ -316,9 +328,12 @@ void GenerateFruit()
 		case devoured:
 		{
 			change++;
-			fruitRow = 0x01 << (rand(change) % 8);
-			fruitCol = ~(0x01 << (rand(change) % 8));
-			fruitGone = 0;
+			while(fruitGone)
+			{
+				fruitRow = 0x01 << (rand(change) % 8);
+				fruitCol = ~(0x01 << (rand(change) % 8));
+				fruitGone = isSnakeThere();
+			}				
 			break;
 		}
 		default:
@@ -684,7 +699,7 @@ int main(void)
 	
 	//period for the tasks
 	unsigned long int Keypad_per = 50;
-	unsigned long int GameOfSnakeEasy_per = 150;
+	unsigned long int GameOfSnakeEasy_per = 200;
 	unsigned long int UpdateMatrix_per = 10;
 	unsigned long int GenerateFruit_per = 50;
 	
