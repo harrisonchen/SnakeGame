@@ -133,7 +133,7 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
 			{
 				fruitGone = 1;
 				SnakeShiftGrowY();
@@ -151,7 +151,7 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
 			{
 				fruitGone = 1;
 				SnakeShiftGrowY();
@@ -169,7 +169,7 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(~cNext == fruitCol))
+			else if((snakeBody[0].rowPos == fruitRow)&&((~cNext) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
 			{
 				fruitGone = 1;
 				cNext = ~cNext;
@@ -189,7 +189,7 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(~cNext == fruitCol))
+			else if((snakeBody[0].rowPos == fruitRow)&&((~cNext) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
 			{
 				fruitGone = 1;
 				cNext = ~cNext;
