@@ -24,8 +24,8 @@ unsigned char rNext;
 unsigned char cNext;
 unsigned char x, keyVal;//for keypad functions
 unsigned char fruitGone;
-unsigned char fruitRow = 0x40;
-unsigned char fruitCol = 0x02;
+unsigned char fruitRow;
+unsigned char fruitCol;
 unsigned char change;//seed for random function. it gets incremented.
 
 
@@ -133,8 +133,9 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(~(snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
 			{
+				fruitGone = 1;
 				SnakeShiftGrowY();
 			}
 			else
@@ -150,8 +151,9 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(~(snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
 			{
+				fruitGone = 1;
 				SnakeShiftGrowY();
 			}
 			else
@@ -167,8 +169,9 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(cNext == fruitCol))
+			else if((rNext == fruitRow)&&(~cNext == fruitCol))
 			{
+				fruitGone = 1;
 				cNext = ~cNext;
 				SnakeShiftGrowX();
 			}
@@ -186,8 +189,9 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(cNext == fruitCol))
+			else if((rNext == fruitRow)&&(~cNext == fruitCol))
 			{
+				fruitGone = 1;
 				cNext = ~cNext;
 				SnakeShiftGrowX();
 			}
@@ -225,11 +229,9 @@ void GenerateFruit()
 	{
 		case -1:
 		{
-			change = 0;
+			change = 1;
 			fruitRow = 0x01 << (rand(change) % 8);
 			fruitCol = ~(0x01 << (rand(change) % 8));
-			transmit_dataA1(fruitRow);
-			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			Fruit_Status = fresh;
 			break;
@@ -252,11 +254,9 @@ void GenerateFruit()
 		}
 		default:
 		{
-			change = 0;
+			change = 1;
 			fruitRow = 0x01 << (rand(change) % 8);
 			fruitCol = ~(0x01 << (rand(change) % 8));
-			transmit_dataA1(fruitRow);
-			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			Fruit_Status = fresh;
 			break;
@@ -274,18 +274,14 @@ void GenerateFruit()
 			change++;
 			fruitRow = 0x01 << (rand(change) % 8);
 			fruitCol = ~(0x01 << (rand(change) % 8));
-			transmit_dataA1(fruitRow);
-			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			break;
 		}
 		default:
 		{
-			change = 0;
+			change = 1;
 			fruitRow = 0x01 << (rand(change) % 8);
 			fruitCol = ~(0x01 << (rand(change) % 8));
-			transmit_dataA1(fruitRow);
-			transmit_dataB1(fruitCol);
 			fruitGone = 0;
 			Fruit_Status = fresh;
 			break;
@@ -299,7 +295,9 @@ void UpdateMatrix()
 	{
 		transmit_dataB1(snakeBody[i].colPos);
 		transmit_dataA1(snakeBody[i].rowPos);
-	}		
+	}
+	transmit_dataB1(fruitCol);
+	transmit_dataD1(fruitRow);
 }
 
 void transmit_dataA1(unsigned char data) //transmit 8bits using PORTA 0 to 3
@@ -313,6 +311,32 @@ void transmit_dataA1(unsigned char data) //transmit 8bits using PORTA 0 to 3
 	}
 	PORTA |= 0x04;
 	PORTA = 0x00;
+}
+
+void transmit_dataA2(unsigned char data) //transmit 8bits using PORTA 0 to 3
+{
+	int i;
+	for(i = 0; i < 8; ++i)
+	{
+		PORTA = 0x80;
+		PORTA |= ((data >> i) & 0x01); //transmit 8bits using PORTB 0 to 3
+		PORTA |= 0x20;
+	}
+	PORTA |= 0x40;
+	PORTA = 0x00;
+}
+
+void transmit_dataD1(unsigned char data) //transmit 8bits using PORTA 0 to 3
+{
+	int i;
+	for(i = 0; i < 8; ++i)
+	{
+		PORTD = 0x08;
+		PORTD |= ((data >> i) & 0x01); //transmit 8bits using PORTB 0 to 3
+		PORTD |= 0x02;
+	}
+	PORTD |= 0x04;
+	PORTD = 0x00;
 }
 
 void transmit_dataB1(unsigned char data)
@@ -516,16 +540,19 @@ int main(void)
 	DDRA = 0xFF; PORTA = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xF0; PORTC = 0x0F;
+	DDRD = 0xFF; PORTD = 0x00;
 	
 	//period for the tasks
 	unsigned long int Keypad_per = 50;
-	unsigned long int GameOfSnakeEasy_per = 400;
+	unsigned long int GameOfSnakeEasy_per = 150;
 	unsigned long int UpdateMatrix_per = 1;
+	unsigned long int GenerateFruit_per = 50;
 	
 	//Calculating GCD
 	unsigned long int tmpGCD;
 	tmpGCD = findGCD(Keypad_per,GameOfSnakeEasy_per);
 	tmpGCD = findGCD(tmpGCD,UpdateMatrix_per);
+	tmpGCD = findGCD(tmpGCD,GenerateFruit_per);
 	
 	//Greatest common divisor for all tasks or smallest time unit for tasks.
 	unsigned long int GCD = tmpGCD;
@@ -534,10 +561,11 @@ int main(void)
 	unsigned long int Keypad_period = Keypad_per/GCD;
 	unsigned long int GameOfSnakeEasy_period = GameOfSnakeEasy_per/GCD;
 	unsigned long int UpdateMatrix_period = UpdateMatrix_per/GCD;
+	unsigned long int GenerateFruit_period = GenerateFruit_per/GCD;
 	
 	//Declare an array of tasks
-	static task task1, task2, task3;
-	task *tasks[] = {&task1, &task2, &task3};
+	static task task1, task2, task3, task4;
+	task *tasks[] = {&task1, &task2, &task3, &task4};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	//Task 1
@@ -557,6 +585,12 @@ int main(void)
 	task3.period = UpdateMatrix_period;
 	task3.elapsedTime = UpdateMatrix_period;
 	task3.TickFct = &UpdateMatrix;
+	
+	//Task 4
+	task4.state = -1;
+	task4.period = UpdateMatrix_period;
+	task4.elapsedTime = UpdateMatrix_period;
+	task4.TickFct = &GenerateFruit;
 
 	TimerSet(GCD);
 	TimerOn();
@@ -564,6 +598,7 @@ int main(void)
 	unsigned short i;
 	KeyState = -1;
 	GameState = -1;
+	Fruit_Status = -1;
 
 	while(1)
 	{
