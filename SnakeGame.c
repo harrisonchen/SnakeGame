@@ -24,8 +24,8 @@ unsigned char rNext;
 unsigned char cNext;
 unsigned char x, keyVal;//for keypad functions
 unsigned char fruitGone;
-unsigned char fruitRow;
-unsigned char fruitCol;
+unsigned char fruitRow = 0x40;
+unsigned char fruitCol = 0x02;
 unsigned char change;//seed for random function. it gets incremented.
 
 
@@ -133,6 +133,10 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
+			else if((rNext == fruitRow)&&(~(snakeBody[0].colPos)&0xFF) == fruitCol)
+			{
+				SnakeShiftGrowY();
+			}
 			else
 			{
 				SnakeShiftY();
@@ -145,6 +149,10 @@ void UpdateSnakePos()
 			if(rNext == 0x00)
 			{
 				LoseGame();
+			}
+			else if((rNext == fruitRow)&&(~(snakeBody[0].colPos)&0xFF) == fruitCol)
+			{
+				SnakeShiftGrowY();
 			}
 			else
 			{
@@ -159,6 +167,11 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
+			else if((rNext == fruitRow)&&(cNext == fruitCol))
+			{
+				cNext = ~cNext;
+				SnakeShiftGrowX();
+			}
 			else
 			{
 				cNext = ~cNext;
@@ -172,6 +185,11 @@ void UpdateSnakePos()
 			if(cNext == 0x00)
 			{
 				LoseGame();
+			}
+			else if((rNext == fruitRow)&&(cNext == fruitCol))
+			{
+				cNext = ~cNext;
+				SnakeShiftGrowX();
 			}
 			else
 			{
@@ -279,8 +297,8 @@ void UpdateMatrix()
 {
 	for(int i = 0; i < (snakeBody->size); ++i)
 	{
-		transmit_dataB1(snakeBody[0].colPos);
-		transmit_dataA1(snakeBody[0].rowPos);
+		transmit_dataB1(snakeBody[i].colPos);
+		transmit_dataA1(snakeBody[i].rowPos);
 	}		
 }
 
@@ -323,7 +341,7 @@ void GameOfSnakeEasy()
 		}
 		case updateSnakePos:
 		{
-			GameState = updateMatrix;
+			//GameState = updateMatrix;
 			break;
 		}
 		case updateMatrix:
@@ -347,7 +365,7 @@ void GameOfSnakeEasy()
 		}
 		case updateMatrix:
 		{
-			UpdateMatrix();
+			//UpdateMatrix();
 			break;
 		}
 		default:
@@ -501,11 +519,13 @@ int main(void)
 	
 	//period for the tasks
 	unsigned long int Keypad_per = 50;
-	unsigned long int GameOfSnakeEasy_per = 200;
+	unsigned long int GameOfSnakeEasy_per = 400;
+	unsigned long int UpdateMatrix_per = 1;
 	
 	//Calculating GCD
-	unsigned long int tmpGCD = 1;
-	tmpGCD = findGCD(Keypad_per,1);
+	unsigned long int tmpGCD;
+	tmpGCD = findGCD(Keypad_per,GameOfSnakeEasy_per);
+	tmpGCD = findGCD(tmpGCD,UpdateMatrix_per);
 	
 	//Greatest common divisor for all tasks or smallest time unit for tasks.
 	unsigned long int GCD = tmpGCD;
@@ -513,10 +533,11 @@ int main(void)
 	//Recalculate GCd periods for scheduler
 	unsigned long int Keypad_period = Keypad_per/GCD;
 	unsigned long int GameOfSnakeEasy_period = GameOfSnakeEasy_per/GCD;
+	unsigned long int UpdateMatrix_period = UpdateMatrix_per/GCD;
 	
 	//Declare an array of tasks
-	static task task1, task2;
-	task *tasks[] = {&task1, &task2};
+	static task task1, task2, task3;
+	task *tasks[] = {&task1, &task2, &task3};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	//Task 1
@@ -530,6 +551,12 @@ int main(void)
 	task2.period = GameOfSnakeEasy_period;
 	task2.elapsedTime = GameOfSnakeEasy_period;
 	task2.TickFct = &GameOfSnakeEasy;
+
+	//Task 3
+	task3.state = -1;
+	task3.period = UpdateMatrix_period;
+	task3.elapsedTime = UpdateMatrix_period;
+	task3.TickFct = &UpdateMatrix;
 
 	TimerSet(GCD);
 	TimerOn();
@@ -547,7 +574,7 @@ int main(void)
 				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
 				tasks[i]->elapsedTime = 0;
 			}
-			tasks[i]->elapsedTime += GCD;
+			tasks[i]->elapsedTime += 1;
 		}
 		while(!TimerFlag);
 		TimerFlag = 0;
