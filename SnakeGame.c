@@ -30,6 +30,7 @@ unsigned char change;//seed for random function. it gets incremented.
 unsigned char rowSnake[8];
 unsigned char rowFruit[8];
 unsigned char col[8];
+unsigned char lose;
 
 typedef struct _Snake
 {
@@ -152,14 +153,33 @@ void RowRegister()
 	}
 }
 
+int isOwnSnake()
+{
+	for(int i = 0; i < (snakeBody->size); ++i)
+	{
+		if( ((rNext&0xFF) == (snakeBody[i].rowPos&0xFF)) && ((cNext&0xFF) == (snakeBody[i].colPos&0xFF)) )
+		{
+			return 1;
+		}
+	}
+	for(int i = 0; i < (snakeBody->size); ++i)
+	{
+		if( ((rNext&0xFF) == (snakeBody[i].rowPos&0xFF)) && (((~cNext)&0xFF) == (snakeBody[i].colPos&0xFF)) )
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 enum dir_states{up,down,left,right,reset} dir;
 
 void UpdateSnakePos()
 {
 	if(keyVal != -1)
 	{
-		dir = keyVal;	
-	}	
+		dir = keyVal;
+	}
 	switch(dir)
 	{
 		case -1:
@@ -173,11 +193,11 @@ void UpdateSnakePos()
 		case up:
 		{
 			rNext = (snakeBody[0].rowPos) << 1;
-			if(rNext == 0x00)
+			if(rNext == 0x00 || isOwnSnake())
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))
 			{
 				fruitGone = 1;
 				SnakeShiftGrowY();
@@ -191,11 +211,11 @@ void UpdateSnakePos()
 		case down:
 		{
 			rNext = (snakeBody[0].rowPos) >> 1;
-			if(rNext == 0x00)
+			if(rNext == 0x00 || isOwnSnake())
 			{
 				LoseGame();
 			}
-			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))
 			{
 				fruitGone = 1;
 				SnakeShiftGrowY();
@@ -209,11 +229,11 @@ void UpdateSnakePos()
 		case left:
 		{
 			cNext = (~(snakeBody[0].colPos)&0xFF) >> 1;
-			if(cNext == 0x00)
+			if(cNext == 0x00 || isOwnSnake())
 			{
 				LoseGame();
 			}
-			else if((snakeBody[0].rowPos == fruitRow)&&(((~cNext)&0xFF) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((snakeBody[0].rowPos == fruitRow)&&(((~cNext)&0xFF) == fruitCol))
 			{
 				fruitGone = 1;
 				cNext = ~cNext;
@@ -229,11 +249,11 @@ void UpdateSnakePos()
 		case right:
 		{
 			cNext = (~(snakeBody[0].colPos)&0xFF) << 1;
-			if(cNext == 0x00)
+			if(cNext == 0x00 || isOwnSnake())
 			{
 				LoseGame();
 			}
-			else if((snakeBody[0].rowPos == fruitRow)&&(((~cNext)&0xFF) == fruitCol))//((rNext == fruitRow)&&((snakeBody[0].colPos)&0xFF) == fruitCol)
+			else if((snakeBody[0].rowPos == fruitRow)&&(((~cNext)&0xFF) == fruitCol))
 			{
 				fruitGone = 1;
 				cNext = ~cNext;
@@ -348,27 +368,26 @@ void GenerateFruit()
 	}
 }
 
-enum UpdateStates{col1, col2, col3, col4, col5, col6, col7, col8} UpdateState;
+enum UpdateStates{col1, col2, col3, col4, col5, col6, col7, col8, LOST} UpdateState;
 
 void UpdateMatrix()
 {
-	/*for(int i = 0; i < 8; ++i)
-	{
-		rowSnake[i] = 0xF0;
-		rowFruit[i] = 0x0F;
-		//col[i] = 0xFF;
-	}
-	ColInit();*/
 	switch(UpdateState)
 	{
 		case -1:
 		{
+			lose = 0;
 			RowRegister();
 			UpdateState = col1;
 			break;
 		}
 		case col1:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col2;
 			transmit_dataB1((~col[0])&0xFF);
@@ -378,6 +397,11 @@ void UpdateMatrix()
 		}
 		case col2:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col3;
 			transmit_dataB1((~col[1])&0xFF);
@@ -387,6 +411,11 @@ void UpdateMatrix()
 		}
 		case col3:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col4;
 			transmit_dataB1((~col[2])&0xFF);
@@ -396,6 +425,11 @@ void UpdateMatrix()
 		}
 		case col4:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col5;
 			transmit_dataB1((~col[3])&0xFF);
@@ -405,6 +439,11 @@ void UpdateMatrix()
 		}
 		case col5:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col6;
 			transmit_dataB1((~col[4])&0xFF);
@@ -414,6 +453,11 @@ void UpdateMatrix()
 		}
 		case col6:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col7;
 			transmit_dataB1((~col[5])&0xFF);
@@ -423,6 +467,11 @@ void UpdateMatrix()
 		}
 		case col7:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col8;
 			transmit_dataB1((~col[6])&0xFF);
@@ -432,11 +481,26 @@ void UpdateMatrix()
 		}
 		case col8:
 		{
+			if(lose)
+			{
+				UpdateState = LOST;
+				break;
+			}
 			RowRegister();
 			UpdateState = col1;
 			transmit_dataB1((~col[7])&0xFF);
 			transmit_dataA1(rowSnake[7]);
 			transmit_dataD1(rowFruit[7]);
+			break;
+		}
+		case LOST:
+		{
+			transmit_dataB1(0x00);
+			transmit_dataD1(0xFF);
+			if(dir == reset)
+			{
+				UpdateState = -1;
+			}
 			break;
 		}
 		default:
@@ -446,13 +510,6 @@ void UpdateMatrix()
 			break;
 		}
 	}
-	/*for(int i = 0; i < (snakeBody->size); ++i)
-	{
-		transmit_dataB1(snakeBody[i].colPos);
-		transmit_dataA1(snakeBody[i].rowPos);
-	}
-	transmit_dataB1(fruitCol);
-	transmit_dataD1(fruitRow);*/
 }
 
 void transmit_dataA1(unsigned char data) //transmit 8bits using PORTA 0 to 3
@@ -474,7 +531,7 @@ void transmit_dataA2(unsigned char data) //transmit 8bits using PORTA 0 to 3
 	for(i = 0; i < 8; ++i)
 	{
 		PORTA = 0x80;
-		PORTA |= ((data >> i) & 0x01); //transmit 8bits using PORTB 0 to 3
+		PORTA |= ((data >> i) & 0x10); //transmit 8bits using PORTB 0 to 3
 		PORTA |= 0x20;
 	}
 	PORTA |= 0x40;
@@ -661,33 +718,15 @@ void GetKeyPress()
 }
 
 void LoseGame()
-{/*
-	transmit_dataA1(0xFF);
-	transmit_dataB1(~(0xFF));
-	switch(dir)
+{
+	if(keyVal == reset)
 	{
-		case up:
-		{
-			
-			break;
-		}
-		case down:
-		{
-			break;
-		}
-		case left:
-		{
-			break;
-		}
-		case right:
-		{
-			break;
-		}
-		default:
-		{
-			break;
-		}
-	}*/
+		lose = 0;
+	}
+	else
+	{
+		lose = 1;
+	}		
 }
 
 int main(void)
@@ -699,8 +738,8 @@ int main(void)
 	
 	//period for the tasks
 	unsigned long int Keypad_per = 50;
-	unsigned long int GameOfSnakeEasy_per = 200;
-	unsigned long int UpdateMatrix_per = 10;
+	unsigned long int GameOfSnakeEasy_per = 300;
+	unsigned long int UpdateMatrix_per = 1;
 	unsigned long int GenerateFruit_per = 50;
 	
 	//Calculating GCD
@@ -767,6 +806,15 @@ int main(void)
 			}
 			tasks[i]->elapsedTime += 1;
 		}
+		
+		if(keyVal == reset)
+		{
+			KeyState = -1;
+			GameState = -1;
+			UpdateState = -1;
+			Fruit_Status = -1;
+		}
+		
 		while(!TimerFlag);
 		TimerFlag = 0;
 	}
