@@ -1,7 +1,7 @@
 /*	SnakeGame.c - $date$
  *	Name & E-mail:  - Harrison Chen hchen030@ucr.edu
  *	CS Login: hchen030
- *	Partner(s) Name & E-mail:  -
+ *	Partner(s) Name & E-mail:  -  Patrick Ly-Vo plyvo001@ucr.edu
  *	Lab Section: 22
  *	Assignment: Lab #  Exercise #
  *	Exercise Description:
@@ -30,7 +30,6 @@ unsigned char change;//seed for random function. it gets incremented.
 unsigned char rowSnake[8];
 unsigned char rowFruit[8];
 unsigned char col[8];
-unsigned char lose;
 
 typedef struct _Snake
 {
@@ -376,18 +375,12 @@ void UpdateMatrix()
 	{
 		case -1:
 		{
-			lose = 0;
 			RowRegister();
 			UpdateState = col1;
 			break;
 		}
 		case col1:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col2;
 			transmit_dataB1((~col[0])&0xFF);
@@ -397,11 +390,6 @@ void UpdateMatrix()
 		}
 		case col2:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col3;
 			transmit_dataB1((~col[1])&0xFF);
@@ -411,11 +399,6 @@ void UpdateMatrix()
 		}
 		case col3:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col4;
 			transmit_dataB1((~col[2])&0xFF);
@@ -425,11 +408,6 @@ void UpdateMatrix()
 		}
 		case col4:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col5;
 			transmit_dataB1((~col[3])&0xFF);
@@ -439,11 +417,6 @@ void UpdateMatrix()
 		}
 		case col5:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col6;
 			transmit_dataB1((~col[4])&0xFF);
@@ -453,11 +426,6 @@ void UpdateMatrix()
 		}
 		case col6:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col7;
 			transmit_dataB1((~col[5])&0xFF);
@@ -467,11 +435,6 @@ void UpdateMatrix()
 		}
 		case col7:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col8;
 			transmit_dataB1((~col[6])&0xFF);
@@ -481,11 +444,6 @@ void UpdateMatrix()
 		}
 		case col8:
 		{
-			if(lose)
-			{
-				UpdateState = LOST;
-				break;
-			}
 			RowRegister();
 			UpdateState = col1;
 			transmit_dataB1((~col[7])&0xFF);
@@ -497,10 +455,6 @@ void UpdateMatrix()
 		{
 			transmit_dataB1(0x00);
 			transmit_dataD1(0xFF);
-			if(dir == reset)
-			{
-				UpdateState = -1;
-			}
 			break;
 		}
 		default:
@@ -577,12 +531,6 @@ void GameOfSnakeEasy()
 		}
 		case updateSnakePos:
 		{
-			//GameState = updateMatrix;
-			break;
-		}
-		case updateMatrix:
-		{
-			GameState = updateSnakePos;
 			break;
 		}
 		default:
@@ -599,11 +547,6 @@ void GameOfSnakeEasy()
 			UpdateSnakePos();
 			break;
 		}
-		case updateMatrix:
-		{
-			//UpdateMatrix();
-			break;
-		}
 		default:
 		{
 			break;
@@ -613,7 +556,7 @@ void GameOfSnakeEasy()
 
 unsigned char GetKeypadKey() 
 {
-	PORTC = 0xEF; // Enable col 4 with 0, disable others with 1â€™s
+	PORTC = 0xEF; // Enable col 4 with 0, disable others with 1’s
 	asm("nop"); // add a delay to allow PORTC to stabilize before checking
 	if (GetBit(PINC,0)==0) { return('1'); }
 	if (GetBit(PINC,1)==0) { return('4'); }
@@ -621,7 +564,7 @@ unsigned char GetKeypadKey()
 	if (GetBit(PINC,3)==0) { return('*'); }
 
 	// Check keys in col 2
-	PORTC = 0xDF; // Enable col 5 with 0, disable others with 1â€™s
+	PORTC = 0xDF; // Enable col 5 with 0, disable others with 1’s
 	asm("nop"); // add a delay to allow PORTC to stabilize before checking
 	if (GetBit(PINC,0)==0) { return('2'); }
 	if (GetBit(PINC,1)==0) { return('5'); }
@@ -630,7 +573,7 @@ unsigned char GetKeypadKey()
 	// ... *****FINISH*****
 
 	// Check keys in col 3
-	PORTC = 0xBF; // Enable col 6 with 0, disable others with 1â€™s
+	PORTC = 0xBF; // Enable col 6 with 0, disable others with 1’s
 	asm("nop"); // add a delay to allow PORTC to stabilize before checking
 	if (GetBit(PINC,0)==0) { return('3'); }
 	if (GetBit(PINC,1)==0) { return('6'); }
@@ -639,7 +582,7 @@ unsigned char GetKeypadKey()
 	// ... *****FINISH*****
 
 	// Check keys in col 4	
-	PORTC = 0x7F; // Enable col 6 with 0, disable others with 1â€™s
+	PORTC = 0x7F; // Enable col 6 with 0, disable others with 1’s
 	asm("nop"); // add a delay to allow PORTC to stabilize before checking
 	if (GetBit(PINC,0)==0) { return('A'); }
 	if (GetBit(PINC,1)==0) { return('B'); }
@@ -719,14 +662,7 @@ void GetKeyPress()
 
 void LoseGame()
 {
-	if(keyVal == reset)
-	{
-		lose = 0;
-	}
-	else
-	{
-		lose = 1;
-	}		
+		
 }
 
 int main(void)
@@ -805,14 +741,6 @@ int main(void)
 				tasks[i]->elapsedTime = 0;
 			}
 			tasks[i]->elapsedTime += 1;
-		}
-		
-		if(keyVal == reset)
-		{
-			KeyState = -1;
-			GameState = -1;
-			UpdateState = -1;
-			Fruit_Status = -1;
 		}
 		
 		while(!TimerFlag);
