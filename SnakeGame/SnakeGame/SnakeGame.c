@@ -30,6 +30,89 @@ unsigned char change;//seed for random function. it gets incremented.
 unsigned char rowSnake[8];
 unsigned char rowFruit[8];
 unsigned char col[8];
+unsigned char score = 0;
+unsigned short score1;
+unsigned short score2;
+unsigned short dataScore;
+unsigned short dataSnakeFruit;
+
+unsigned short Write7Seg(unsigned char x) {
+	// Define this function to return the 7seg representation (bits 6..0)
+	// Use a switch to set the returned value to the appropriate hex value.
+	// Remember to use only 1 return statement in the function.
+	switch (x)
+	{
+		case -1:
+		{
+			return 0x7E;
+			break;
+		}
+		case 0:
+		{
+			return 0x7E;
+			break;
+		}
+		case 1:
+		{
+			return 0x48;
+			break;
+		}
+		case 2:
+		{
+			return 0x3D;
+			break;
+		}
+		case 3:
+		{
+			return 0x6D;
+			break;
+		}
+		case 4:
+		{
+			return 0x4B;
+			break;
+		}
+		case 5:
+		{
+			return 0x67;
+			break;
+		}
+		case 6:
+		{
+			return 0x77;
+			break;
+		}
+		case 7:
+		{
+			return 0x4E;
+			break;
+		}
+		case 8:
+		{
+			return 0x7F;
+			break;
+		}
+		case 9:
+		{
+			return 0x6F;
+			break;
+		}
+		default:
+		{
+			return 0x7E;
+			break;
+		}
+	}
+}
+
+void ScoreBoard()
+{
+	++score;
+	score1 = Write7Seg(score % 10);
+	score2 = Write7Seg(score / 10);
+	dataScore = ((score1 << 8) + score2);
+	transmit_dataD1(~dataScore);
+}
 
 typedef struct _Snake
 {
@@ -102,6 +185,7 @@ void SnakeShiftGrowY()
 	(snakeBody->size)++;
 	snakeHead.rowPos = rNext;
 	SnakeArrayAdj();
+	ScoreBoard();
 }
 
 void SnakeShiftGrowX()
@@ -109,6 +193,7 @@ void SnakeShiftGrowX()
 	(snakeBody->size)++;
 	snakeHead.colPos = cNext;
 	SnakeArrayAdj();
+	ScoreBoard();
 }
 
 void ColInit()
@@ -383,72 +468,88 @@ void UpdateMatrix()
 		{
 			RowRegister();
 			UpdateState = col2;
+			dataSnakeFruit = rowSnake[0];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[0]);
 			transmit_dataB1((~col[0])&0xFF);
-			transmit_dataA1(rowSnake[0]);
-			transmit_dataD1(rowFruit[0]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[0]);
 			break;
 		}
 		case col2:
 		{
 			RowRegister();
 			UpdateState = col3;
+			dataSnakeFruit = rowSnake[1];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[1]);
 			transmit_dataB1((~col[1])&0xFF);
-			transmit_dataA1(rowSnake[1]);
-			transmit_dataD1(rowFruit[1]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[1]);
 			break;
 		}
 		case col3:
 		{
 			RowRegister();
 			UpdateState = col4;
+			dataSnakeFruit = rowSnake[2];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[2]);
 			transmit_dataB1((~col[2])&0xFF);
-			transmit_dataA1(rowSnake[2]);
-			transmit_dataD1(rowFruit[2]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[2]);
 			break;
 		}
 		case col4:
 		{
 			RowRegister();
 			UpdateState = col5;
+			dataSnakeFruit = rowSnake[3];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[3]);
 			transmit_dataB1((~col[3])&0xFF);
-			transmit_dataA1(rowSnake[3]);
-			transmit_dataD1(rowFruit[3]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[3]);
 			break;
 		}
 		case col5:
 		{
 			RowRegister();
 			UpdateState = col6;
+			dataSnakeFruit = rowSnake[4];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[4]);
 			transmit_dataB1((~col[4])&0xFF);
-			transmit_dataA1(rowSnake[4]);
-			transmit_dataD1(rowFruit[4]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[4]);
 			break;
 		}
 		case col6:
 		{
 			RowRegister();
 			UpdateState = col7;
+			dataSnakeFruit = rowSnake[5];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[5]);
 			transmit_dataB1((~col[5])&0xFF);
-			transmit_dataA1(rowSnake[5]);
-			transmit_dataD1(rowFruit[5]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[5]);
 			break;
 		}
 		case col7:
 		{
 			RowRegister();
 			UpdateState = col8;
+			dataSnakeFruit = rowSnake[6];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[6]);
 			transmit_dataB1((~col[6])&0xFF);
-			transmit_dataA1(rowSnake[6]);
-			transmit_dataD1(rowFruit[6]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[6]);
 			break;
 		}
 		case col8:
 		{
 			RowRegister();
 			UpdateState = col1;
+			dataSnakeFruit = rowSnake[7];
+			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[7]);
 			transmit_dataB1((~col[7])&0xFF);
-			transmit_dataA1(rowSnake[7]);
-			transmit_dataD1(rowFruit[7]);
+			transmit_dataA1(dataSnakeFruit);
+			//transmit_dataD1(rowFruit[7]);
 			break;
 		}
 		case LOST:
@@ -466,10 +567,10 @@ void UpdateMatrix()
 	}
 }
 
-void transmit_dataA1(unsigned char data) //transmit 8bits using PORTA 0 to 3
+void transmit_dataA1(unsigned short data) //transmit 8bits using PORTA 0 to 3
 {
 	int i;
-	for(i = 0; i < 8; ++i)
+	for(i = 0; i < 16; ++i)
 	{
 		PORTA = 0x08;
 		PORTA |= ((data >> i) & 0x01); //transmit 8bits using PORTB 0 to 3
@@ -481,7 +582,7 @@ void transmit_dataA1(unsigned char data) //transmit 8bits using PORTA 0 to 3
 
 void transmit_dataA2(unsigned char data) //transmit 8bits using PORTA 0 to 3
 {
-	int i;
+	/*int i;
 	for(i = 0; i < 8; ++i)
 	{
 		PORTA = 0x80;
@@ -489,13 +590,13 @@ void transmit_dataA2(unsigned char data) //transmit 8bits using PORTA 0 to 3
 		PORTA |= 0x20;
 	}
 	PORTA |= 0x40;
-	PORTA = 0x00;
+	PORTA = 0x00;*/
 }
 
-void transmit_dataD1(unsigned char data) //transmit 8bits using PORTA 0 to 3
+void transmit_dataD1(unsigned short data) //transmit 8bits using PORTA 0 to 3
 {
 	int i;
-	for(i = 0; i < 8; ++i)
+	for(i = 0; i < 16; ++i)
 	{
 		PORTD = 0x08;
 		PORTD |= ((data >> i) & 0x01); //transmit 8bits using PORTB 0 to 3
