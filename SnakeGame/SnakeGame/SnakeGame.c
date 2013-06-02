@@ -609,7 +609,7 @@ void GenerateFruit()
 	}
 }
 
-enum UpdateStates{col1, col2, col3, col4, col5, col6, col7, col8, LOST} UpdateState;
+enum UpdateStates{col1, col2, col3, col4, col5, col6, col7, col8, LOST,wait1,wait2,wait3,wait4,wait5,wait6,wait7,wait8,} UpdateState;
 
 void UpdateMatrix()
 {
@@ -624,7 +624,7 @@ void UpdateMatrix()
 		case col1:
 		{
 			RowRegister();
-			UpdateState = col2;
+			UpdateState = wait1;
 			dataSnakeFruit = rowSnake[0];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[0]);
 			transmit_dataB1((~col[0])&0xFF);
@@ -632,10 +632,17 @@ void UpdateMatrix()
 			//transmit_dataD1(rowFruit[0]);
 			break;
 		}
+		case wait1:
+		{
+			UpdateState = col2;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
+			break;
+		}
 		case col2:
 		{
 			RowRegister();
-			UpdateState = col3;
+			UpdateState = wait2;
 			dataSnakeFruit = rowSnake[1];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[1]);
 			if(gameTaskState == Hard)
@@ -647,10 +654,17 @@ void UpdateMatrix()
 			//transmit_dataD1(rowFruit[1]);
 			break;
 		}
+		case wait2:
+		{
+			UpdateState = col3;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
+			break;
+		}
 		case col3:
 		{
 			RowRegister();
-			UpdateState = col4;
+			UpdateState = wait3;
 			dataSnakeFruit = rowSnake[2];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[2]);
 			if(gameTaskState == Hard)
@@ -662,10 +676,17 @@ void UpdateMatrix()
 			//transmit_dataD1(rowFruit[2]);
 			break;
 		}
+		case wait3:
+		{
+			UpdateState = col4;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
+			break;
+		}
 		case col4:
 		{
 			RowRegister();
-			UpdateState = col5;
+			UpdateState = wait4;
 			dataSnakeFruit = rowSnake[3];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[3]);
 			transmit_dataB1((~col[3])&0xFF);
@@ -673,10 +694,17 @@ void UpdateMatrix()
 			//transmit_dataD1(rowFruit[3]);
 			break;
 		}
+		case wait4:
+		{
+			UpdateState = col5;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
+			break;
+		}
 		case col5:
 		{
 			RowRegister();
-			UpdateState = col6;
+			UpdateState = wait5;
 			dataSnakeFruit = rowSnake[4];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[4]);
 			transmit_dataB1((~col[4])&0xFF);
@@ -684,10 +712,17 @@ void UpdateMatrix()
 			//transmit_dataD1(rowFruit[4]);
 			break;
 		}
+		case wait5:
+		{
+			UpdateState = col6;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
+			break;
+		}
 		case col6:
 		{
 			RowRegister();
-			UpdateState = col7;
+			UpdateState = wait6;
 			dataSnakeFruit = rowSnake[5];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[5]);
 			if(gameTaskState == Hard)
@@ -699,10 +734,17 @@ void UpdateMatrix()
 			//transmit_dataD1(rowFruit[5]);
 			break;
 		}
+		case wait6:
+		{
+			UpdateState = col7;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
+			break;
+		}
 		case col7:
 		{
 			RowRegister();
-			UpdateState = col8;
+			UpdateState = wait7;
 			dataSnakeFruit = rowSnake[6];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[6]);
 			if(gameTaskState == Hard)
@@ -714,15 +756,29 @@ void UpdateMatrix()
 			//transmit_dataD1(rowFruit[6]);
 			break;
 		}
+		case wait7:
+		{
+			UpdateState = col8;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
+			break;
+		}
 		case col8:
 		{
 			RowRegister();
-			UpdateState = col1;
+			UpdateState = wait8;
 			dataSnakeFruit = rowSnake[7];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[7]);
 			transmit_dataB1((~col[7])&0xFF);
 			transmit_dataA1(dataSnakeFruit);
 			//transmit_dataD1(rowFruit[7]);
+			break;
+		}
+		case wait8:
+		{
+			UpdateState = col1;
+			transmit_dataB1(0xFF);
+			transmit_dataA1(0x0000);
 			break;
 		}
 		case LOST:
