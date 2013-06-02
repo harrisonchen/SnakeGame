@@ -40,6 +40,8 @@ unsigned short dataScore;
 unsigned short dataSnakeFruit;
 unsigned short block1 = (0x40 + 0x20);
 unsigned short block2 = (0x04 + 0x02);
+unsigned char lose;
+unsigned char win;
 
 unsigned short Write7Seg(unsigned char x) {
 	// Define this function to return the 7seg representation (bits 6..0)
@@ -117,6 +119,116 @@ void ScoreBoard()
 	score2 = Write7Seg(score / 10);
 	dataScore = ((score1 << 8) + score2);
 	transmit_dataD1(~dataScore);
+}
+
+enum dir_states{up,down,left,right,reset} dir;//direction states
+	
+enum gameTaskStates{t1,t2,t3,t4,WaitGame,Start,Easy,Normal,Hard,Lose,Win,Clear}gameTaskState;//game states
+
+unsigned char GetKeypadKey()
+{
+	PORTC = 0xEF; // Enable col 4 with 0, disable others with 1’s
+	asm("nop"); // add a delay to allow PORTC to stabilize before checking
+if (GetBit(PINC,0)==0) { return('1'); }
+	if (GetBit(PINC,1)==0) { return('4'); }
+	if (GetBit(PINC,2)==0) { return('7'); }
+	if (GetBit(PINC,3)==0) { return('*'); }
+
+	// Check keys in col 2
+	PORTC = 0xDF; // Enable col 5 with 0, disable others with 1’s
+	asm("nop"); // add a delay to allow PORTC to stabilize before checking
+	if (GetBit(PINC,0)==0) { return('2'); }
+	if (GetBit(PINC,1)==0) { return('5'); }
+	if (GetBit(PINC,2)==0) { return('8'); }
+	if (GetBit(PINC,3)==0) { return('0'); }
+	// ... *****FINISH*****
+
+	// Check keys in col 3
+	PORTC = 0xBF; // Enable col 6 with 0, disable others with 1’s
+	asm("nop"); // add a delay to allow PORTC to stabilize before checking
+	if (GetBit(PINC,0)==0) { return('3'); }
+	if (GetBit(PINC,1)==0) { return('6'); }
+	if (GetBit(PINC,2)==0) { return('9'); }
+	if (GetBit(PINC,3)==0) { return('#'); }
+	// ... *****FINISH*****
+
+	// Check keys in col 4	
+	PORTC = 0x7F; // Enable col 6 with 0, disable others with 1’s
+	asm("nop"); // add a delay to allow PORTC to stabilize before checking
+	if (GetBit(PINC,0)==0) { return('A'); }
+	if (GetBit(PINC,1)==0) { return('B'); }
+	if (GetBit(PINC,2)==0) { return('C'); }
+	if (GetBit(PINC,3)==0) { return('D'); }
+	// ... *****FINISH*****
+
+	return('\0'); // default value
+
+}
+
+enum KeyStates {Wait, Pressed, Released} KeyState;
+
+void KeyOut(unsigned char in)
+{
+	switch (in)
+	{
+		case '\0': keyVal = -1; break;
+		case '1': keyVal = -1; break;
+		case '2': keyVal = right; break;
+		case '3': keyVal = -1; break;
+		case '4': keyVal = up; break;
+		case '5': keyVal = down; break;
+		case '6': keyVal = -1; break;
+		case '7': keyVal = -1; break;
+		case '8': keyVal = left; break;
+		case '9': keyVal = -1; break;
+		case 'A': keyVal = Hard; break;
+		case 'B': keyVal = Normal; break;
+		case 'C': keyVal = Easy; break;
+		case 'D': keyVal = Start; break;
+		case '*': keyVal = reset; break;
+		case '0': keyVal = -1; break;
+		case '#': keyVal = -1; break;
+		default: keyVal = -1; break;
+	}
+}
+
+void GetKeyPress()
+{
+	switch(KeyState)
+	{
+		case -1:
+		{
+			keyVal = -1;
+			KeyState = Wait;
+			break;
+		}
+		case Wait:
+		{
+			x = GetKeypadKey();
+			if(x != '\0')
+			{
+				KeyOut(x);
+				KeyState = Pressed;
+				//PORTA = keyVal;
+			}
+			break;
+		}
+		case Pressed:
+		{
+			x = GetKeypadKey();
+			if(x == '\0')
+			{
+				KeyState = Wait;
+			}
+			break;
+		}
+		default:
+		{
+			keyVal = -1;
+			KeyState = Wait;
+			break;
+		}
+	}
 }
 
 typedef struct _Snake
@@ -261,8 +373,6 @@ int isOwnSnake()
 	return 0;
 }
 
-enum gameTaskStates{t1,t2,t3,t4,WaitGame,Start,Easy,Normal,Hard,Lose,Win,Clear}gameTaskState;
-
 void GameTask()
 {
 	switch(gameTaskState)
@@ -303,7 +413,7 @@ void GameTask()
 				gameTaskState = Hard;
 				hardEn = 1;
 			}
-			else if(keyVal == Clear)
+			else if(keyVal == reset)
 			{
 				gameTaskState = Clear;
 			}
@@ -311,7 +421,11 @@ void GameTask()
 		}
 		case Easy:
 		{
-			if(keyVal == Clear)
+			if(lose)
+			{
+				gameTaskState = Lose;
+			}
+			else if(keyVal == reset)
 			{
 				gameTaskState = Clear;
 			}
@@ -319,7 +433,11 @@ void GameTask()
 		}
 		case Normal:
 		{
-			if(keyVal == Clear)
+			if(lose)
+			{
+				gameTaskState = Lose;
+			}
+			else if(keyVal == reset)
 			{
 				gameTaskState = Clear;
 			}
@@ -327,7 +445,11 @@ void GameTask()
 		}
 		case Hard:
 		{
-			if(keyVal == Clear)
+			if(lose)
+			{
+				gameTaskState = Lose;
+			}
+			else if(keyVal == reset)
 			{
 				gameTaskState = Clear;
 			}
@@ -335,7 +457,10 @@ void GameTask()
 		}
 		case Lose:
 		{
-			if(keyVal == Clear)
+			easyEn = 0;
+			normalEn = 0;
+			hardEn = 0;
+			if(keyVal == reset)
 			{
 				gameTaskState = Clear;
 			}
@@ -343,6 +468,9 @@ void GameTask()
 		}
 		case Win:
 		{
+			easyEn = 0;
+			normalEn = 0;
+			hardEn = 0;
 			if(keyVal == Clear)
 			{
 				gameTaskState = Clear;
@@ -351,6 +479,7 @@ void GameTask()
 		}
 		case Clear:
 		{
+			ResetGame();
 			gameTaskState = WaitGame;
 			break;
 		}
@@ -365,11 +494,9 @@ void GameTask()
 	}		
 }
 
-enum dir_states{up,down,left,right,reset} dir;
-
 void UpdateSnakePos()
 {
-	if(keyVal != -1)
+	if((keyVal == up) ||(keyVal == down) ||(keyVal == left) ||(keyVal == right))
 	{
 		dir = keyVal;
 	}
@@ -388,15 +515,15 @@ void UpdateSnakePos()
 			rNext = (snakeBody[0].rowPos) << 1;
 			if(rNext == 0x00 || isOwnSnake())
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (rNext == 0x20) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x02)||(((~snakeBody[0].colPos)&0xFF) == 0x04)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (rNext == 0x02) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x20)||(((~snakeBody[0].colPos)&0xFF) == 0x40)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))
 			{
@@ -414,15 +541,15 @@ void UpdateSnakePos()
 			rNext = (snakeBody[0].rowPos) >> 1;
 			if(rNext == 0x00 || isOwnSnake())
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (rNext == 0x40) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x02)||(((~snakeBody[0].colPos)&0xFF) == 0x04)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (rNext == 0x04) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x20)||(((~snakeBody[0].colPos)&0xFF) == 0x40)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))
 			{
@@ -440,15 +567,15 @@ void UpdateSnakePos()
 			cNext = (~(snakeBody[0].colPos)&0xFF) >> 1;
 			if(cNext == 0x00 || isOwnSnake())
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (cNext == 0x04) && ( (snakeBody[0].rowPos == 0x40)||(snakeBody[0].rowPos == 0x20)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (cNext == 0x40) && ( (snakeBody[0].rowPos == 0x04)||(snakeBody[0].rowPos == 0x02)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if((snakeBody[0].rowPos == fruitRow)&&(((~cNext)&0xFF) == fruitCol))
 			{
@@ -468,15 +595,15 @@ void UpdateSnakePos()
 			cNext = (~(snakeBody[0].colPos)&0xFF) << 1;
 			if(cNext == 0x00 || isOwnSnake())
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (cNext == 0x02) && ( (snakeBody[0].rowPos == 0x40)||(snakeBody[0].rowPos == 0x20)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if(hardEn && (cNext == 0x20) && ( (snakeBody[0].rowPos == 0x04)||(snakeBody[0].rowPos == 0x02)))
 			{
-				LoseGame();
+				lose = 1;
 			}
 			else if((snakeBody[0].rowPos == fruitRow)&&(((~cNext)&0xFF) == fruitCol))
 			{
@@ -493,6 +620,7 @@ void UpdateSnakePos()
 		}
 		case reset:
 		{
+			lose = 0;
 			(snakeBody->size) = 1;
 			(snakeBody[0].rowPos) = 0x08;
 			(snakeBody[0].colPos) = ~(0x10);
@@ -501,6 +629,7 @@ void UpdateSnakePos()
 		}
 		default:
 		{
+			lose = 0;
 			(snakeBody->size) = 1;
 			(snakeBody[0].rowPos) = 0x08;
 			(snakeBody[0].colPos) = ~(0x10);
@@ -591,6 +720,7 @@ void GenerateFruit()
 			change++;
 			while(fruitGone)
 			{
+				change++;
 				fruitRow = 0x01 << (rand(change) % 8);
 				fruitCol = ~(0x01 << (rand(change) % 8));
 				fruitGone = isSnakeThere();
@@ -617,20 +747,33 @@ void UpdateMatrix()
 	{
 		case -1:
 		{
+			lose = 0;
 			RowRegister();
 			UpdateState = col1;
 			break;
 		}
 		case col1:
 		{
-			RowRegister();
-			UpdateState = wait1;
-			dataSnakeFruit = rowSnake[0];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[0]);
-			transmit_dataB1((~col[0])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[0]);
-			break;
+			if(lose)
+			{
+				RowRegister();
+				UpdateState = wait1;
+				dataSnakeFruit = rowSnake[0];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[0]);
+				transmit_dataB1((~col[0])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+			}
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait1;
+				dataSnakeFruit = rowSnake[0];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[0]);
+				transmit_dataB1((~col[0])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[0]);
+			}
+			break;		
 		}
 		case wait1:
 		{
@@ -641,17 +784,29 @@ void UpdateMatrix()
 		}
 		case col2:
 		{
-			RowRegister();
-			UpdateState = wait2;
-			dataSnakeFruit = rowSnake[1];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[1]);
-			if(gameTaskState == Hard)
+			if(lose)
 			{
-				dataSnakeFruit = dataSnakeFruit + (block1);
+				RowRegister();
+				UpdateState = wait2;
+				dataSnakeFruit = rowSnake[1];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[1]);
+				transmit_dataB1((~col[1])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
 			}
-			transmit_dataB1((~col[1])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[1]);
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait2;
+				dataSnakeFruit = rowSnake[1];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[1]);
+				if(gameTaskState == Hard)
+				{
+					dataSnakeFruit = dataSnakeFruit + (block1);
+				}
+				transmit_dataB1((~col[1])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[1]);
+			}				
 			break;
 		}
 		case wait2:
@@ -663,17 +818,29 @@ void UpdateMatrix()
 		}
 		case col3:
 		{
-			RowRegister();
-			UpdateState = wait3;
-			dataSnakeFruit = rowSnake[2];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[2]);
-			if(gameTaskState == Hard)
+			if(lose)
 			{
-				dataSnakeFruit = dataSnakeFruit + (block1);
+				RowRegister();
+				UpdateState = wait3;
+				dataSnakeFruit = rowSnake[2];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[2]);
+				transmit_dataB1((~col[2])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
 			}
-			transmit_dataB1((~col[2])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[2]);
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait3;
+				dataSnakeFruit = rowSnake[2];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[2]);
+				if(gameTaskState == Hard)
+				{
+					dataSnakeFruit = dataSnakeFruit + (block1);
+				}
+				transmit_dataB1((~col[2])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[2]);
+			}				
 			break;
 		}
 		case wait3:
@@ -685,13 +852,25 @@ void UpdateMatrix()
 		}
 		case col4:
 		{
-			RowRegister();
-			UpdateState = wait4;
-			dataSnakeFruit = rowSnake[3];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[3]);
-			transmit_dataB1((~col[3])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[3]);
+			if(lose)
+			{
+				RowRegister();
+				UpdateState = wait4;
+				dataSnakeFruit = rowSnake[3];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[3]);
+				transmit_dataB1((~col[3])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+			}
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait4;
+				dataSnakeFruit = rowSnake[3];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[3]);
+				transmit_dataB1((~col[3])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[3]);
+			}				
 			break;
 		}
 		case wait4:
@@ -703,13 +882,25 @@ void UpdateMatrix()
 		}
 		case col5:
 		{
-			RowRegister();
-			UpdateState = wait5;
-			dataSnakeFruit = rowSnake[4];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[4]);
-			transmit_dataB1((~col[4])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[4]);
+			if(lose)
+			{
+				RowRegister();
+				UpdateState = wait5;
+				dataSnakeFruit = rowSnake[4];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[4]);
+				transmit_dataB1((~col[4])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+			}
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait5;
+				dataSnakeFruit = rowSnake[4];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[4]);
+				transmit_dataB1((~col[4])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[4]);
+			}				
 			break;
 		}
 		case wait5:
@@ -721,17 +912,29 @@ void UpdateMatrix()
 		}
 		case col6:
 		{
-			RowRegister();
-			UpdateState = wait6;
-			dataSnakeFruit = rowSnake[5];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[5]);
-			if(gameTaskState == Hard)
+			if(lose)
 			{
-				dataSnakeFruit = dataSnakeFruit + (block2);
+				RowRegister();
+				UpdateState = wait6;
+				dataSnakeFruit = rowSnake[5];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[5]);
+				transmit_dataB1((~col[5])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
 			}
-			transmit_dataB1((~col[5])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[5]);
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait6;
+				dataSnakeFruit = rowSnake[5];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[5]);
+				if(gameTaskState == Hard)
+				{
+					dataSnakeFruit = dataSnakeFruit + (block2);
+				}
+				transmit_dataB1((~col[5])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[5]);
+			}				
 			break;
 		}
 		case wait6:
@@ -743,17 +946,29 @@ void UpdateMatrix()
 		}
 		case col7:
 		{
-			RowRegister();
-			UpdateState = wait7;
-			dataSnakeFruit = rowSnake[6];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[6]);
-			if(gameTaskState == Hard)
+			if(lose)
 			{
-				dataSnakeFruit = dataSnakeFruit + (block2);
+				RowRegister();
+				UpdateState = wait7;
+				dataSnakeFruit = rowSnake[6];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[6]);
+				transmit_dataB1((~col[6])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
 			}
-			transmit_dataB1((~col[6])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[6]);
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait7;
+				dataSnakeFruit = rowSnake[6];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[6]);
+				if(gameTaskState == Hard)
+				{
+					dataSnakeFruit = dataSnakeFruit + (block2);
+				}
+				transmit_dataB1((~col[6])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[6]);
+			}				
 			break;
 		}
 		case wait7:
@@ -765,13 +980,25 @@ void UpdateMatrix()
 		}
 		case col8:
 		{
-			RowRegister();
-			UpdateState = wait8;
-			dataSnakeFruit = rowSnake[7];
-			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[7]);
-			transmit_dataB1((~col[7])&0xFF);
-			transmit_dataA1(dataSnakeFruit);
-			//transmit_dataD1(rowFruit[7]);
+			if(lose)
+			{
+				RowRegister();
+				UpdateState = wait8;
+				dataSnakeFruit = rowSnake[7];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowSnake[7]);
+				transmit_dataB1((~col[7])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+			}
+			else if(easyEn || normalEn || hardEn)
+			{
+				RowRegister();
+				UpdateState = wait8;
+				dataSnakeFruit = rowSnake[7];
+				dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[7]);
+				transmit_dataB1((~col[7])&0xFF);
+				transmit_dataA1(dataSnakeFruit);
+				//transmit_dataD1(rowFruit[7]);
+			}				
 			break;
 		}
 		case wait8:
@@ -779,12 +1006,6 @@ void UpdateMatrix()
 			UpdateState = col1;
 			transmit_dataB1(0xFF);
 			transmit_dataA1(0x0000);
-			break;
-		}
-		case LOST:
-		{
-			transmit_dataB1(0x00);
-			transmit_dataD1(0xFF);
 			break;
 		}
 		default:
@@ -807,19 +1028,6 @@ void transmit_dataA1(unsigned short data) //transmit 8bits using PORTA 0 to 3
 	}
 	PORTA |= 0x04;
 	PORTA = 0x00;
-}
-
-void transmit_dataA2(unsigned char data) //transmit 8bits using PORTA 0 to 3
-{
-	/*int i;
-	for(i = 0; i < 8; ++i)
-	{
-		PORTA = 0x80;
-		PORTA |= ((data >> i) & 0x10); //transmit 8bits using PORTB 0 to 3
-		PORTA |= 0x20;
-	}
-	PORTA |= 0x40;
-	PORTA = 0x00;*/
 }
 
 void transmit_dataD1(unsigned short data) //transmit 8bits using PORTA 0 to 3
@@ -888,7 +1096,10 @@ void GameOfSnakeEasy()
 	{
 		case updateSnakePosEasy:
 		{
-			UpdateSnakePos();
+			if(easyEn)
+			{
+				UpdateSnakePos();
+			}				
 			break;
 		}
 		default:
@@ -938,7 +1149,10 @@ void GameOfSnakeNormal()
 	{
 		case updateSnakePosNormal:
 		{
-			UpdateSnakePos();
+			if(normalEn)
+			{
+				UpdateSnakePos();
+			}				
 			break;
 		}
 		default:
@@ -988,7 +1202,10 @@ void GameOfSnakeHard()
 	{
 		case updateSnakePosHard:
 		{
-			UpdateSnakePos();
+			if(hardEn)
+			{
+				UpdateSnakePos();
+			}				
 			break;
 		}
 		default:
@@ -996,121 +1213,20 @@ void GameOfSnakeHard()
 			break;
 		}
 	}
-}
-
-unsigned char GetKeypadKey() 
-{
-	PORTC = 0xEF; // Enable col 4 with 0, disable others with 1’s
-	asm("nop"); // add a delay to allow PORTC to stabilize before checking
-	if (GetBit(PINC,0)==0) { return('1'); }
-	if (GetBit(PINC,1)==0) { return('4'); }
-	if (GetBit(PINC,2)==0) { return('7'); }
-	if (GetBit(PINC,3)==0) { return('*'); }
-
-	// Check keys in col 2
-	PORTC = 0xDF; // Enable col 5 with 0, disable others with 1’s
-	asm("nop"); // add a delay to allow PORTC to stabilize before checking
-	if (GetBit(PINC,0)==0) { return('2'); }
-	if (GetBit(PINC,1)==0) { return('5'); }
-	if (GetBit(PINC,2)==0) { return('8'); }
-	if (GetBit(PINC,3)==0) { return('0'); }
-	// ... *****FINISH*****
-
-	// Check keys in col 3
-	PORTC = 0xBF; // Enable col 6 with 0, disable others with 1’s
-	asm("nop"); // add a delay to allow PORTC to stabilize before checking
-	if (GetBit(PINC,0)==0) { return('3'); }
-	if (GetBit(PINC,1)==0) { return('6'); }
-	if (GetBit(PINC,2)==0) { return('9'); }
-	if (GetBit(PINC,3)==0) { return('#'); }
-	// ... *****FINISH*****
-
-	// Check keys in col 4	
-	PORTC = 0x7F; // Enable col 6 with 0, disable others with 1’s
-	asm("nop"); // add a delay to allow PORTC to stabilize before checking
-	if (GetBit(PINC,0)==0) { return('A'); }
-	if (GetBit(PINC,1)==0) { return('B'); }
-	if (GetBit(PINC,2)==0) { return('C'); }
-	if (GetBit(PINC,3)==0) { return('D'); }
-	// ... *****FINISH*****
-
-	return('\0'); // default value
-
-}
-
-enum KeyStates {Wait, Pressed, Released} KeyState;
-
-void KeyOut(unsigned char in)
-{
-	switch (in)
-	{
-		case '\0': keyVal = -1; break;
-		case '1': keyVal = -1; break;
-		case '2': keyVal = right; break;
-		case '3': keyVal = -1; break;
-		case '4': keyVal = up; break;
-		case '5': keyVal = down; break;
-		case '6': keyVal = -1; break;
-		case '7': keyVal = -1; break;
-		case '8': keyVal = left; break;
-		case '9': keyVal = -1; break;
-		case 'A': keyVal = Hard; break;
-		case 'B': keyVal = Normal; break;
-		case 'C': keyVal = Easy; break;
-		case 'D': keyVal = Start; break;
-		case '*': keyVal = reset; break;
-		case '0': keyVal = -1; break;
-		case '#': keyVal = -1; break;
-		default: keyVal = -1; break;
-	}
-}
-
-void GetKeyPress()
-{
-	switch(KeyState)
-	{
-		case -1:
-		{
-			keyVal = -1;
-			KeyState = Wait;
-			break;
-		}
-		case Wait:
-		{
-			x = GetKeypadKey();
-			if(x != '\0')
-			{
-				KeyOut(x);
-				KeyState = Pressed;
-				//PORTA = keyVal;
-			}
-			break;
-		}
-		case Pressed:
-		{
-			x = GetKeypadKey();
-			if(x == '\0')
-			{
-				KeyState = Wait;
-			}
-			break;
-		}
-		default:
-		{
-			keyVal = -1;
-			KeyState = Wait;
-			break;
-		}
-	}
-}
-
-void LoseGame()
-{
-		
 }
 
 void ResetGame()
 {
+	gameTaskState = -1;
+	KeyState = -1;
+	GameStateEasy = -1;
+	GameStateNormal = -1;
+	GameStateHard = -1;
+	UpdateState = -1;
+	Fruit_Status = -1;
+	dir = -1;
+	score = 0;
+	lose = 0;
 	
 }
 
@@ -1209,6 +1325,7 @@ int main(void)
 	GameStateHard = -1;
 	UpdateState = -1;
 	Fruit_Status = -1;
+	dir = -1;
 
 	while(1)
 	{
