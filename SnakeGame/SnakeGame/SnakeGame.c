@@ -38,6 +38,8 @@ unsigned short score1;
 unsigned short score2;
 unsigned short dataScore;
 unsigned short dataSnakeFruit;
+unsigned short block1 = (0x40 + 0x20);
+unsigned short block2 = (0x04 + 0x02);
 
 unsigned short Write7Seg(unsigned char x) {
 	// Define this function to return the 7seg representation (bits 6..0)
@@ -388,6 +390,14 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
+			else if(hardEn && (rNext == 0x20) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x02)||(((~snakeBody[0].colPos)&0xFF) == 0x04)))
+			{
+				LoseGame();
+			}
+			else if(hardEn && (rNext == 0x02) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x20)||(((~snakeBody[0].colPos)&0xFF) == 0x40)))
+			{
+				LoseGame();
+			}
 			else if((rNext == fruitRow)&&(((snakeBody[0].colPos)&0xFF) == fruitCol))
 			{
 				fruitGone = 1;
@@ -403,6 +413,14 @@ void UpdateSnakePos()
 		{
 			rNext = (snakeBody[0].rowPos) >> 1;
 			if(rNext == 0x00 || isOwnSnake())
+			{
+				LoseGame();
+			}
+			else if(hardEn && (rNext == 0x40) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x02)||(((~snakeBody[0].colPos)&0xFF) == 0x04)))
+			{
+				LoseGame();
+			}
+			else if(hardEn && (rNext == 0x04) && ( ((~(snakeBody[0].colPos)&0xFF) == 0x20)||(((~snakeBody[0].colPos)&0xFF) == 0x40)))
 			{
 				LoseGame();
 			}
@@ -424,6 +442,14 @@ void UpdateSnakePos()
 			{
 				LoseGame();
 			}
+			else if(hardEn && (cNext == 0x04) && ( (snakeBody[0].rowPos == 0x40)||(snakeBody[0].rowPos == 0x20)))
+			{
+				LoseGame();
+			}
+			else if(hardEn && (cNext == 0x40) && ( (snakeBody[0].rowPos == 0x04)||(snakeBody[0].rowPos == 0x02)))
+			{
+				LoseGame();
+			}
 			else if((snakeBody[0].rowPos == fruitRow)&&(((~cNext)&0xFF) == fruitCol))
 			{
 				fruitGone = 1;
@@ -441,6 +467,14 @@ void UpdateSnakePos()
 		{
 			cNext = (~(snakeBody[0].colPos)&0xFF) << 1;
 			if(cNext == 0x00 || isOwnSnake())
+			{
+				LoseGame();
+			}
+			else if(hardEn && (cNext == 0x02) && ( (snakeBody[0].rowPos == 0x40)||(snakeBody[0].rowPos == 0x20)))
+			{
+				LoseGame();
+			}
+			else if(hardEn && (cNext == 0x20) && ( (snakeBody[0].rowPos == 0x04)||(snakeBody[0].rowPos == 0x02)))
 			{
 				LoseGame();
 			}
@@ -481,6 +515,22 @@ int isSnakeThere()
 	for(int i = 0; i < (snakeBody->size); ++i)
 	{
 		if( ((fruitRow&0xFF) == (snakeBody[i].rowPos&0xFF)) && ((fruitCol&0xFF) == (snakeBody[i].colPos&0xFF)) )
+		{
+			return 1;
+		}
+		else if( hardEn && (((fruitRow&0xFF)==(0x40))||((fruitRow&0xFF)==(0x20))) && (((~fruitCol)&0xFF)==(0x02)))
+		{
+			return 1;
+		}
+		else if( hardEn && (((fruitRow&0xFF)==(0x40))||((fruitRow&0xFF)==(0x20))) && (((~fruitCol)&0xFF)==(0x04)))
+		{
+			return 1;
+		}
+		else if( hardEn && (((fruitRow&0xFF)==(0x04))||((fruitRow&0xFF)==(0x02))) && (((~fruitCol)&0xFF)==(0x20)))
+		{
+			return 1;
+		}
+		else if( hardEn && (((fruitRow&0xFF)==(0x04))||((fruitRow&0xFF)==(0x02))) && (((~fruitCol)&0xFF)==(0x40)))
 		{
 			return 1;
 		}
@@ -588,6 +638,10 @@ void UpdateMatrix()
 			UpdateState = col3;
 			dataSnakeFruit = rowSnake[1];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[1]);
+			if(gameTaskState == Hard)
+			{
+				dataSnakeFruit = dataSnakeFruit + (block1);
+			}
 			transmit_dataB1((~col[1])&0xFF);
 			transmit_dataA1(dataSnakeFruit);
 			//transmit_dataD1(rowFruit[1]);
@@ -599,6 +653,10 @@ void UpdateMatrix()
 			UpdateState = col4;
 			dataSnakeFruit = rowSnake[2];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[2]);
+			if(gameTaskState == Hard)
+			{
+				dataSnakeFruit = dataSnakeFruit + (block1);
+			}
 			transmit_dataB1((~col[2])&0xFF);
 			transmit_dataA1(dataSnakeFruit);
 			//transmit_dataD1(rowFruit[2]);
@@ -632,6 +690,10 @@ void UpdateMatrix()
 			UpdateState = col7;
 			dataSnakeFruit = rowSnake[5];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[5]);
+			if(gameTaskState == Hard)
+			{
+				dataSnakeFruit = dataSnakeFruit + (block2);
+			}
 			transmit_dataB1((~col[5])&0xFF);
 			transmit_dataA1(dataSnakeFruit);
 			//transmit_dataD1(rowFruit[5]);
@@ -643,6 +705,10 @@ void UpdateMatrix()
 			UpdateState = col8;
 			dataSnakeFruit = rowSnake[6];
 			dataSnakeFruit = ((dataSnakeFruit << 8) + rowFruit[6]);
+			if(gameTaskState == Hard)
+			{
+				dataSnakeFruit = dataSnakeFruit + (block2);
+			}
 			transmit_dataB1((~col[6])&0xFF);
 			transmit_dataA1(dataSnakeFruit);
 			//transmit_dataD1(rowFruit[6]);
@@ -826,6 +892,56 @@ void GameOfSnakeNormal()
 	}
 }
 
+enum GameStatesHard{updateSnakePosHard} GameStateHard;
+
+void GameOfSnakeHard()
+{
+	switch(GameStateHard)
+	{
+		case -1:
+		{
+			if(hardEn == 1)
+			{
+				GameStateHard = updateSnakePosHard;
+				(snakeBody->size) = 1;
+				(snakeBody[0].rowPos) = 0x08;
+				(snakeBody[0].colPos) = ~(0x10);
+				snakeHead = snakeBody[0];
+			}
+			break;
+		}
+		case updateSnakePosHard:
+		{
+			break;
+		}
+		default:
+		{
+			if(hardEn == 1)
+			{
+				GameStateHard = updateSnakePosHard;
+				(snakeBody->size) = 1;
+				(snakeBody[0].rowPos) = 0x08;
+				(snakeBody[0].colPos) = ~(0x10);
+				snakeHead = snakeBody[0];
+			}
+			break;
+		}
+	}
+	
+	switch(GameStateHard)
+	{
+		case updateSnakePosHard:
+		{
+			UpdateSnakePos();
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+}
+
 unsigned char GetKeypadKey() 
 {
 	PORTC = 0xEF; // Enable col 4 with 0, disable others with 1’s
@@ -956,6 +1072,7 @@ int main(void)
 	unsigned long int UpdateMatrix_per = 1;
 	unsigned long int GenerateFruit_per = 50;
 	unsigned long int GameOfSnakeNormal_per = 200;
+	unsigned long int GameOfSnakeHard_per = 200;
 	
 	//Calculating GCD
 	unsigned long int tmpGCD;
@@ -964,6 +1081,7 @@ int main(void)
 	tmpGCD = findGCD(tmpGCD,GenerateFruit_per);
 	tmpGCD = findGCD(tmpGCD,GameTask_per);
 	tmpGCD = findGCD(tmpGCD,GameOfSnakeNormal_per);
+	tmpGCD = findGCD(tmpGCD,GameOfSnakeHard_per);
 	
 	//Greatest common divisor for all tasks or smallest time unit for tasks.
 	unsigned long int GCD = tmpGCD;
@@ -975,10 +1093,11 @@ int main(void)
 	unsigned long int UpdateMatrix_period = UpdateMatrix_per/GCD;
 	unsigned long int GenerateFruit_period = GenerateFruit_per/GCD;
 	unsigned long int GameOfSnakeNormal_period = GameOfSnakeNormal_per/GCD;
+	unsigned long int GameOfSnakeHard_period = GameOfSnakeHard_per/GCD;
 	
 	//Declare an array of tasks
-	static task task0, task1, task2, task3, task4, task5;
-	task *tasks[] = {&task0, &task1, &task2, &task3, &task4, &task5};
+	static task task0, task1, task2, task3, task4, task5, task6;
+	task *tasks[] = {&task0, &task1, &task2, &task3, &task4, &task5, &task6};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	//Task 0
@@ -1016,6 +1135,12 @@ int main(void)
 	task5.period = GameOfSnakeNormal_period;
 	task5.elapsedTime = GameOfSnakeNormal_period;
 	task5.TickFct = &GameOfSnakeNormal;
+	
+	//Task 6
+	task6.state = -1;
+	task6.period = GameOfSnakeHard_period;
+	task6.elapsedTime = GameOfSnakeHard_period;
+	task6.TickFct = &GameOfSnakeHard;
 
 	TimerSet(GCD);
 	TimerOn();
@@ -1025,6 +1150,7 @@ int main(void)
 	KeyState = -1;
 	GameStateEasy = -1;
 	GameStateNormal = -1;
+	GameStateHard = -1;
 	UpdateState = -1;
 	Fruit_Status = -1;
 
