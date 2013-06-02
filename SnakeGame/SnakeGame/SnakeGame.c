@@ -18,6 +18,9 @@
 #include <ucr/timer.h>
 #include <stdio.h>
 
+unsigned char easyEn;
+unsigned char normalEn;
+unsigned char hardEn;
 unsigned char matrixRowPosition;
 unsigned char matrixColPosition;
 unsigned char rNext;
@@ -256,6 +259,110 @@ int isOwnSnake()
 	return 0;
 }
 
+enum gameTaskStates{t1,t2,t3,t4,WaitGame,Start,Easy,Normal,Hard,Lose,Win,Clear}gameTaskState;
+
+void GameTask()
+{
+	switch(gameTaskState)
+	{
+		case -1:
+		{
+			easyEn = 0;
+			normalEn = 0;
+			hardEn = 0;
+			gameTaskState = WaitGame;
+			break;
+		}
+		case WaitGame:
+		{
+			easyEn = 0;
+			normalEn = 0;
+			hardEn = 0;
+			if(keyVal == Start)
+			{
+				gameTaskState = Start;
+			}				
+			break;
+		}
+		case Start:
+		{
+			if(keyVal == Easy)
+			{
+				gameTaskState = Easy;
+				easyEn = 1;
+			}
+			else if(keyVal == Normal)
+			{
+				gameTaskState = Normal;
+				normalEn = 1;
+			}
+			else if(keyVal == Hard)
+			{
+				gameTaskState = Hard;
+				hardEn = 1;
+			}
+			else if(keyVal == Clear)
+			{
+				gameTaskState = Clear;
+			}
+			break;
+		}
+		case Easy:
+		{
+			if(keyVal == Clear)
+			{
+				gameTaskState = Clear;
+			}
+			break;
+		}
+		case Normal:
+		{
+			if(keyVal == Clear)
+			{
+				gameTaskState = Clear;
+			}
+			break;
+		}
+		case Hard:
+		{
+			if(keyVal == Clear)
+			{
+				gameTaskState = Clear;
+			}
+			break;
+		}
+		case Lose:
+		{
+			if(keyVal == Clear)
+			{
+				gameTaskState = Clear;
+			}
+			break;
+		}
+		case Win:
+		{
+			if(keyVal == Clear)
+			{
+				gameTaskState = Clear;
+			}
+			break;
+		}
+		case Clear:
+		{
+			gameTaskState = WaitGame;
+			break;
+		}
+		default:
+		{
+			easyEn = 0;
+			normalEn = 0;
+			hardEn = 0;
+			gameTaskState = WaitGame;
+			break;
+		}
+	}		
+}
+
 enum dir_states{up,down,left,right,reset} dir;
 
 void UpdateSnakePos()
@@ -266,14 +373,14 @@ void UpdateSnakePos()
 	}
 	switch(dir)
 	{
-		case -1:
+		/*case -1:
 		{
 			(snakeBody->size) = 1;
 			(snakeBody[0].rowPos) = 0x08;
 			(snakeBody[0].colPos) = ~(0x10);
 			snakeHead = snakeBody[0];
 			break;
-		}
+		}*/
 		case up:
 		{
 			rNext = (snakeBody[0].rowPos) << 1;
@@ -619,31 +726,95 @@ void transmit_dataB1(unsigned char data)
 	PORTB = 0x00;
 }
 
-enum GameStates{updateSnakePos, updateMatrix} GameState;
+enum GameStatesEasy{updateSnakePosEasy} GameStateEasy;
 
 void GameOfSnakeEasy()
 {
-	switch(GameState)
+	switch(GameStateEasy)
 	{
 		case -1:
 		{
-			GameState = updateSnakePos;
+			if(easyEn == 1)
+			{
+				GameStateEasy = updateSnakePosEasy;
+				(snakeBody->size) = 1;
+				(snakeBody[0].rowPos) = 0x08;
+				(snakeBody[0].colPos) = ~(0x10);
+				snakeHead = snakeBody[0];
+			}				
 			break;
 		}
-		case updateSnakePos:
+		case updateSnakePosEasy:
 		{
 			break;
 		}
 		default:
 		{
-			GameState = updateSnakePos;
+			if(easyEn == 1)
+			{
+				GameStateEasy = updateSnakePosEasy;
+				(snakeBody->size) = 1;
+				(snakeBody[0].rowPos) = 0x08;
+				(snakeBody[0].colPos) = ~(0x10);
+				snakeHead = snakeBody[0];
+			}
 			break;
 		}
 	}
 	
-	switch(GameState)
+	switch(GameStateEasy)
 	{
-		case updateSnakePos:
+		case updateSnakePosEasy:
+		{
+			UpdateSnakePos();
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+}
+
+enum GameStatesNormal{updateSnakePosNormal} GameStateNormal;
+
+void GameOfSnakeNormal()
+{
+	switch(GameStateNormal)
+	{
+		case -1:
+		{
+			if(normalEn == 1)
+			{
+				GameStateNormal = updateSnakePosNormal;
+				(snakeBody->size) = 1;
+				(snakeBody[0].rowPos) = 0x08;
+				(snakeBody[0].colPos) = ~(0x10);
+				snakeHead = snakeBody[0];
+			}
+			break;
+		}
+		case updateSnakePosNormal:
+		{
+			break;
+		}
+		default:
+		{
+			if(normalEn == 1)
+			{
+				GameStateNormal = updateSnakePosNormal;
+				(snakeBody->size) = 1;
+				(snakeBody[0].rowPos) = 0x08;
+				(snakeBody[0].colPos) = ~(0x10);
+				snakeHead = snakeBody[0];
+			}
+			break;
+		}
+	}
+	
+	switch(GameStateNormal)
+	{
+		case updateSnakePosNormal:
 		{
 			UpdateSnakePos();
 			break;
@@ -711,11 +882,11 @@ void KeyOut(unsigned char in)
 		case '7': keyVal = -1; break;
 		case '8': keyVal = left; break;
 		case '9': keyVal = -1; break;
-		case 'A': keyVal = -1; break;
-		case 'B': keyVal = -1; break;
-		case 'C': keyVal = -1; break;
-		case 'D': keyVal = reset; break;
-		case '*': keyVal = -1; break;
+		case 'A': keyVal = Hard; break;
+		case 'B': keyVal = Normal; break;
+		case 'C': keyVal = Easy; break;
+		case 'D': keyVal = Start; break;
+		case '*': keyVal = reset; break;
 		case '0': keyVal = -1; break;
 		case '#': keyVal = -1; break;
 		default: keyVal = -1; break;
@@ -766,6 +937,11 @@ void LoseGame()
 		
 }
 
+void ResetGame()
+{
+	
+}
+
 int main(void)
 {
 	DDRA = 0xFF; PORTA = 0x00;
@@ -774,30 +950,42 @@ int main(void)
 	DDRD = 0xFF; PORTD = 0x00;
 	
 	//period for the tasks
+	unsigned long int GameTask_per = 50;
 	unsigned long int Keypad_per = 50;
-	unsigned long int GameOfSnakeEasy_per = 300;
+	unsigned long int GameOfSnakeEasy_per = 400;
 	unsigned long int UpdateMatrix_per = 1;
 	unsigned long int GenerateFruit_per = 50;
+	unsigned long int GameOfSnakeNormal_per = 200;
 	
 	//Calculating GCD
 	unsigned long int tmpGCD;
 	tmpGCD = findGCD(Keypad_per,GameOfSnakeEasy_per);
 	tmpGCD = findGCD(tmpGCD,UpdateMatrix_per);
 	tmpGCD = findGCD(tmpGCD,GenerateFruit_per);
+	tmpGCD = findGCD(tmpGCD,GameTask_per);
+	tmpGCD = findGCD(tmpGCD,GameOfSnakeNormal_per);
 	
 	//Greatest common divisor for all tasks or smallest time unit for tasks.
 	unsigned long int GCD = tmpGCD;
 	
 	//Recalculate GCd periods for scheduler
+	unsigned long int GameTask_period = GameTask_per/GCD;
 	unsigned long int Keypad_period = Keypad_per/GCD;
 	unsigned long int GameOfSnakeEasy_period = GameOfSnakeEasy_per/GCD;
 	unsigned long int UpdateMatrix_period = UpdateMatrix_per/GCD;
 	unsigned long int GenerateFruit_period = GenerateFruit_per/GCD;
+	unsigned long int GameOfSnakeNormal_period = GameOfSnakeNormal_per/GCD;
 	
 	//Declare an array of tasks
-	static task task1, task2, task3, task4;
-	task *tasks[] = {&task1, &task2, &task3, &task4};
+	static task task0, task1, task2, task3, task4, task5;
+	task *tasks[] = {&task0, &task1, &task2, &task3, &task4, &task5};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
+
+	//Task 0
+	task0.state = -1;
+	task0.period = GameTask_period;
+	task0.elapsedTime = GameTask_period;
+	task0.TickFct = &GameTask;
 
 	//Task 1
 	task1.state = -1;
@@ -822,13 +1010,21 @@ int main(void)
 	task4.period = UpdateMatrix_period;
 	task4.elapsedTime = UpdateMatrix_period;
 	task4.TickFct = &GenerateFruit;
+	
+	//Task 5
+	task5.state = -1;
+	task5.period = GameOfSnakeNormal_period;
+	task5.elapsedTime = GameOfSnakeNormal_period;
+	task5.TickFct = &GameOfSnakeNormal;
 
 	TimerSet(GCD);
 	TimerOn();
 
 	unsigned short i;
+	gameTaskState = -1;
 	KeyState = -1;
-	GameState = -1;
+	GameStateEasy = -1;
+	GameStateNormal = -1;
 	UpdateState = -1;
 	Fruit_Status = -1;
 
