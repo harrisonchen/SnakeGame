@@ -134,12 +134,16 @@ void ScoreTask()
 	{
 		case -1:
 		{
-			score = 0;
-			score1 = Write7Seg(score % 10);
-			score2 = Write7Seg(score / 10);
-			dataScore = ((score1 << 8) + score2);
-			transmit_dataD1(~dataScore);
-			ScoreState = NothingScore;
+			transmit_dataD1(0xFFFF);
+			if(startTheGame)
+			{
+				score = 0;
+				score1 = Write7Seg(score % 10);
+				score2 = Write7Seg(score / 10);
+				dataScore = ((score1 << 8) + score2);
+				transmit_dataD1(~dataScore);
+				ScoreState = NothingScore;
+			}				
 			break;
 		}
 		case NothingScore:
@@ -163,12 +167,16 @@ void ScoreTask()
 		}
 		default:
 		{
-			score = 0;
-			score1 = Write7Seg(score % 10);
-			score2 = Write7Seg(score / 10);
-			dataScore = ((score1 << 8) + score2);
-			transmit_dataD1(~dataScore);
-			ScoreState = NothingScore;
+			transmit_dataD1(0xFFFF);
+			if(startTheGame)
+			{
+				score = 0;
+				score1 = Write7Seg(score % 10);
+				score2 = Write7Seg(score / 10);
+				dataScore = ((score1 << 8) + score2);
+				transmit_dataD1(~dataScore);
+				ScoreState = NothingScore;
+			}				
 			break;
 		}
 	}
