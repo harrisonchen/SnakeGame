@@ -18,6 +18,17 @@
 #include <ucr/timer.h>
 #include <stdio.h>
 
+//MICROCONTROLLER COMMUNICATION COMMANDS
+unsigned char TransferData;
+unsigned char ResetMC = 0x1;
+unsigned char StartMC = 0x2;
+unsigned char EasyMC = 0x3;
+unsigned char NormalMC = 0x4;
+unsigned char HardMC = 0x5;
+unsigned char IncrementMC = 0x6;
+unsigned char LoseMC = 0x7;
+////////////////////////////////////////
+
 unsigned char easyEn;
 unsigned char normalEn;
 unsigned char hardEn;
@@ -33,93 +44,15 @@ unsigned char change;//seed for random function. it gets incremented.
 unsigned char rowSnake[8];
 unsigned char rowFruit[8];
 unsigned char col[8];
-unsigned char score = 0;
-unsigned short score1;
-unsigned short score2;
-unsigned short dataScore;
+// unsigned char score = 0;
+// unsigned short score1;
+// unsigned short score2;
+//unsigned short dataScore;
 unsigned short dataSnakeFruit;
 unsigned short block1 = (0x40 + 0x20);
 unsigned short block2 = (0x04 + 0x02);
 unsigned char lose;
 unsigned char win;
-
-unsigned short Write7Seg(unsigned char x) {
-	// Define this function to return the 7seg representation (bits 6..0)
-	// Use a switch to set the returned value to the appropriate hex value.
-	// Remember to use only 1 return statement in the function.
-	switch (x)
-	{
-		case -1:
-		{
-			return 0x7E;
-			break;
-		}
-		case 0:
-		{
-			return 0x7E;
-			break;
-		}
-		case 1:
-		{
-			return 0x48;
-			break;
-		}
-		case 2:
-		{
-			return 0x3D;
-			break;
-		}
-		case 3:
-		{
-			return 0x6D;
-			break;
-		}
-		case 4:
-		{
-			return 0x4B;
-			break;
-		}
-		case 5:
-		{
-			return 0x67;
-			break;
-		}
-		case 6:
-		{
-			return 0x77;
-			break;
-		}
-		case 7:
-		{
-			return 0x4E;
-			break;
-		}
-		case 8:
-		{
-			return 0x7F;
-			break;
-		}
-		case 9:
-		{
-			return 0x6F;
-			break;
-		}
-		default:
-		{
-			return 0x7E;
-			break;
-		}
-	}
-}
-
-void ScoreBoard()
-{
-	++score;
-	score1 = Write7Seg(score % 10);
-	score2 = Write7Seg(score / 10);
-	dataScore = ((score1 << 8) + score2);
-	transmit_dataD1(~dataScore);
-}
 
 enum dir_states{up,down,left,right,reset} dir;//direction states
 	
@@ -302,7 +235,9 @@ void SnakeShiftGrowY()
 	(snakeBody->size)++;
 	snakeHead.rowPos = rNext;
 	SnakeArrayAdj();
-	ScoreBoard();
+	//ScoreBoard();
+	TransferData = IncrementMC;
+	PORTD = TransferData;
 }
 
 void SnakeShiftGrowX()
@@ -310,7 +245,9 @@ void SnakeShiftGrowX()
 	(snakeBody->size)++;
 	snakeHead.colPos = cNext;
 	SnakeArrayAdj();
-	ScoreBoard();
+	//ScoreBoard();
+	TransferData = IncrementMC;
+	PORTD = TransferData;
 }
 
 void ColInit()
@@ -379,6 +316,8 @@ void GameTask()
 	{
 		case -1:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -387,6 +326,8 @@ void GameTask()
 		}
 		case WaitGame:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -398,6 +339,8 @@ void GameTask()
 		}
 		case Start:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			if(keyVal == Easy)
 			{
 				gameTaskState = Easy;
@@ -421,6 +364,8 @@ void GameTask()
 		}
 		case Easy:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			if(lose)
 			{
 				gameTaskState = Lose;
@@ -433,6 +378,8 @@ void GameTask()
 		}
 		case Normal:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			if(lose)
 			{
 				gameTaskState = Lose;
@@ -445,6 +392,8 @@ void GameTask()
 		}
 		case Hard:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			if(lose)
 			{
 				gameTaskState = Lose;
@@ -457,6 +406,8 @@ void GameTask()
 		}
 		case Lose:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -468,6 +419,8 @@ void GameTask()
 		}
 		case Win:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -479,12 +432,16 @@ void GameTask()
 		}
 		case Clear:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			ResetGame();
 			gameTaskState = WaitGame;
 			break;
 		}
 		default:
 		{
+			TransferData = 0x0;
+			PORTD = TransferData;
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -1030,19 +987,6 @@ void transmit_dataA1(unsigned short data) //transmit 8bits using PORTA 0 to 3
 	PORTA = 0x00;
 }
 
-void transmit_dataD1(unsigned short data) //transmit 8bits using PORTA 0 to 3
-{
-	int i;
-	for(i = 0; i < 16; ++i)
-	{
-		PORTD = 0x08;
-		PORTD |= ((data >> i) & 0x01); //transmit 8bits using PORTB 0 to 3
-		PORTD |= 0x02;
-	}
-	PORTD |= 0x04;
-	PORTD = 0x00;
-}
-
 void transmit_dataB1(unsigned char data)
 {
 	int i;
@@ -1225,7 +1169,7 @@ void ResetGame()
 	UpdateState = -1;
 	Fruit_Status = -1;
 	dir = -1;
-	score = 0;
+	//score = 0;
 	lose = 0;
 	
 }
