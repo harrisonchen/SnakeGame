@@ -633,9 +633,15 @@ void GenerateFruit()
 		case -1:
 		{
 			change = 1;
-			fruitRow = 0x01 << (rand(change) % 8);
-			fruitCol = ~(0x01 << (rand(change) % 8));
-			fruitGone = 0;
+			fruitGone = 1;
+			while(fruitGone)
+			{
+				change++;
+				fruitRow = 0x01 << (rand(change) % 8);
+				fruitCol = ~(0x01 << (rand(change) % 8));
+				fruitGone = isSnakeThere();
+			}
+			//fruitGone = 0;
 			Fruit_Status = fresh;
 			break;
 		}
@@ -658,9 +664,14 @@ void GenerateFruit()
 		default:
 		{
 			change = 1;
-			fruitRow = 0x01 << (rand(change) % 8);
-			fruitCol = ~(0x01 << (rand(change) % 8));
-			fruitGone = 0;
+			fruitGone = 1;
+			while(fruitGone)
+			{
+				change++;
+				fruitRow = 0x01 << (rand(change) % 8);
+				fruitCol = ~(0x01 << (rand(change) % 8));
+				fruitGone = isSnakeThere();
+			}
 			Fruit_Status = fresh;
 			break;
 		}
@@ -1161,6 +1172,8 @@ void GameOfSnakeHard()
 
 void ResetGame()
 {
+	TransferData = ResetMC;
+	PORTD = TransferData;
 	gameTaskState = -1;
 	KeyState = -1;
 	GameStateEasy = -1;
