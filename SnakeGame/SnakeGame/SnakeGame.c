@@ -341,28 +341,22 @@ void GameTask()
 		}
 		case Start:
 		{
-			TransferData = 0x0;
-			PORTD = TransferData;
+			//TransferData = 0x0;
+			//PORTD = TransferData;
 			if(keyVal == Easy)
 			{
 				gameTaskState = Easy;
 				easyEn = 1;
-				TransferData = EasyMC;
-				PORTD = TransferData;
 			}
 			else if(keyVal == Normal)
 			{
 				gameTaskState = Normal;
 				normalEn = 1;
-				TransferData = NormalMC;
-				PORTD = TransferData;
 			}
 			else if(keyVal == Hard)
 			{
 				gameTaskState = Hard;
 				hardEn = 1;
-				TransferData = HardMC;
-				PORTD = TransferData;
 			}
 			else if(keyVal == reset)
 			{
@@ -414,7 +408,7 @@ void GameTask()
 		}
 		case Lose:
 		{
-			TransferData = LoseMC;
+			TransferData = 0x0;
 			PORTD = TransferData;
 			easyEn = 0;
 			normalEn = 0;
@@ -440,8 +434,8 @@ void GameTask()
 		}
 		case Clear:
 		{
-			TransferData = 0x0;
-			PORTD = TransferData;
+			//TransferData = 0x0;
+			//PORTD = TransferData;
 			ResetGame();
 			gameTaskState = WaitGame;
 			break;
@@ -1182,7 +1176,7 @@ void ResetGame()
 {
 	TransferData = ResetMC;
 	PORTD = TransferData;
-	gameTaskState = -1;
+	//gameTaskState = -1;
 	KeyState = -1;
 	GameStateEasy = -1;
 	GameStateNormal = -1;
