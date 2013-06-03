@@ -196,6 +196,11 @@ void ResetTask()
 				LoseState = -1;
 				LI_State = -1;
 				LT_State = -1;
+				startTheGame = 0;
+				easyMode = 0;
+				normalMode = 0;
+				hardMode = 0;
+				lostGame = 0;
 			}
 			break;
 		}
@@ -480,7 +485,10 @@ void LI_Tick() {
 	static unsigned char i;
 	switch(LI_State) { // Transitions
 		case -1:
-			LI_State = LI_Init1;
+			if(startTheGame)
+			{
+				LI_State = LI_Init1;
+			}				
 			break;
 		case LI_Init1:
 			LI_State = LI_Init2;
@@ -549,7 +557,10 @@ void LI_Tick() {
 			}
 			break;
 		default:
-			LI_State = LI_Init1;
+			if(startTheGame)
+			{
+				LI_State = LI_Init1;
+			}				
 		} // Transitions
 
 	switch(LI_State) { // State actions
@@ -600,9 +611,12 @@ void LT_Tick() {
 	static unsigned char i, x, c;
 	switch(LT_State) { // Transitions
 		case -1:
-			x = 0;
-			LCD_counter = 74;
-			LT_State = LT_s0;
+			if(startTheGame)
+			{
+				x = 0;
+				LCD_counter = 74;
+				LT_State = LT_s0;
+			}				
 			break;
 		case LT_s0:
 			LT_State = LT_WaitLcdRdy;
@@ -641,8 +655,12 @@ void LT_Tick() {
 			//}
 			break;
 		default:
-			LCD_counter =74;
-			LT_State = LT_s0;
+			if(startTheGame)
+			{
+				x = 0;
+				LCD_counter = 74;
+				LT_State = LT_s0;
+			}
 		} // Transitions
 
 	switch(LT_State) { // State actions
@@ -701,8 +719,6 @@ void LT_Tick() {
 		case LT_WaitBtnRelease:
 			break;
 		default:
-			LCD_counter = 74;
-			x = 0;
 			break;
 	} // State actions
 }
@@ -720,6 +736,11 @@ int main(void)
 	unsigned long int LT_per = 5;
 	unsigned long int ScoreTask_per = 5;
 	unsigned long int ResetTask_per = 5;
+	unsigned long int StartTask_per = 5;
+	unsigned long int EasyTask_per = 5;
+	unsigned long int NormalTask_per = 5;
+	unsigned long int HardTask_per = 5;
+	unsigned long int LoseTask_per = 5;
 		
 	//Calculating GCD
 	unsigned long int tmpGCD = 1;
@@ -734,10 +755,15 @@ int main(void)
 	unsigned long int LT_period = LT_per/GCD;
 	unsigned long int ScoreTask_period = ScoreTask_per/GCD;
 	unsigned long int ResetTask_period = ResetTask_per/GCD;
+	unsigned long int StartTask_period = StartTask_per/GCD;
+	unsigned long int EasyTask_period = EasyTask_per/GCD;
+	unsigned long int NormalTask_period = NormalTask_per/GCD;
+	unsigned long int HardTask_period = HardTask_per/GCD;
+	unsigned long int LoseTask_period = LoseTask_per/GCD;
 	
 	//Declare an array of tasks
-	static task task1, task2, task3, task4;
-	task *tasks[] = {&task1, &task2, &task3, &task4};
+	static task task1, task2, task3, task4, task5, task6, task7, task8, task9;
+	task *tasks[] = {&task1, &task2, &task3, &task4, &task5, &task6, &task7, &task8, &task9};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	//Task 1
@@ -764,6 +790,36 @@ int main(void)
 	task4.elapsedTime = ResetTask_period;
 	task4.TickFct = &ResetTask;
 	
+	//Task5
+	task5.state = -1;
+	task5.period = StartTask_period;
+	task5.elapsedTime = StartTask_period;
+	task5.TickFct = &StartTask;
+	
+	//Task6
+	task6.state = -1;
+	task6.period = EasyTask_period;
+	task6.elapsedTime = EasyTask_period;
+	task6.TickFct = &EasyTask;
+	
+	//Task7
+	task7.state = -1;
+	task7.period = NormalTask_period;
+	task7.elapsedTime = NormalTask_period;
+	task7.TickFct = &NormalTask;
+	
+	//Task8
+	task8.state = -1;
+	task8.period = HardTask_period;
+	task8.elapsedTime = HardTask_period;
+	task8.TickFct = &HardTask;
+	
+	//Task9
+	task9.state = -1;
+	task9.period = LoseTask_period;
+	task9.elapsedTime = LoseTask_period;
+	task9.TickFct = &LoseTask;
+	
 	TimerSet(GCD);
 	TimerOn();
 
@@ -772,6 +828,11 @@ int main(void)
 	LT_State = -1;
 	ScoreState = -1;
 	ResetState = -1;
+	StartState = -1;
+	EasyState = -1;
+	NormalState = -1;
+	HardState = -1;
+	LoseState = -1;
 
 	while(1)
 	{
