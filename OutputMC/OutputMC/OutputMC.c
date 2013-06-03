@@ -32,6 +32,11 @@ unsigned char score = 0;
 unsigned short score1;
 unsigned short score2;
 unsigned short dataScore;
+unsigned char startTheGame;
+unsigned char easyMode;
+unsigned char normalMode;
+unsigned char hardMode;
+unsigned char lostGame;
 
 unsigned short Write7Seg(unsigned char x) {
 	// Define this function to return the 7seg representation (bits 6..0)
@@ -111,7 +116,17 @@ void ScoreBoard()
 	transmit_dataD1(~dataScore);
 }
 
-enum ScoreStates{Nothing, Increment}ScoreState;
+enum ScoreStates{NothingScore, IncrementScore}ScoreState;
+enum ResetStates{NothingReset, ResetGame}ResetState;
+enum StartStates{NothingStart, StartGame}StartState;
+enum EasyStates{NothingEasy, EasyGame}EasyState;
+enum NormalStates{NothingNormal, NormalGame} NormalState;
+enum HardStates{NothingHard, HardGame} HardState;
+enum LoseStates{NothingLose, LoseGame} LoseState;
+enum LI_States { LI_Init1, LI_Init2, LI_Init3, LI_Init4, LI_Init5, LI_Init6,
+LI_WaitDisplayString, LI_Clr, LI_PositionCursor, LI_DisplayChar, LI_WaitGo0 } LI_State;
+enum LT_States { LT_s0, LT_WaitLcdRdy, LT_WaitButton, LT_FillAndDispString,
+LT_HoldGo1, LT_WaitBtnRelease } LT_State;
 
 void ScoreTask()
 {
@@ -124,25 +139,25 @@ void ScoreTask()
 			score2 = Write7Seg(score / 10);
 			dataScore = ((score1 << 8) + score2);
 			transmit_dataD1(~dataScore);
-			ScoreState = Nothing;
+			ScoreState = NothingScore;
 			break;
 		}
-		case Nothing:
+		case NothingScore:
 		{
 			ReadData = (PINC&0xF);
-			if((PINC&0xF) == IncrementMC)
+			if((ReadData) == IncrementMC)
 			{
-				ScoreState = Increment;
+				ScoreState = IncrementScore;
 				ScoreBoard();
 			}
 			break;
 		}
-		case Increment:
+		case IncrementScore:
 		{
 			ReadData = (PINC&0xF);
 			if((ReadData) != IncrementMC)
 			{
-				ScoreState = Nothing;
+				ScoreState = NothingScore;
 			}				
 			break;
 		}
@@ -153,7 +168,239 @@ void ScoreTask()
 			score2 = Write7Seg(score / 10);
 			dataScore = ((score1 << 8) + score2);
 			transmit_dataD1(~dataScore);
-			ScoreState = Nothing;
+			ScoreState = NothingScore;
+			break;
+		}
+	}
+}
+
+void ResetTask()
+{
+	switch(ResetState)
+	{
+		case -1:
+		{
+			ResetState = NothingReset;
+			break;
+		}
+		case NothingReset:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData == ResetMC)
+			{
+				ResetState = ResetGame;
+				ScoreState = -1;
+				EasyState = -1;
+				NormalState = -1;
+				HardState = -1;
+				LoseState = -1;
+				LI_State = -1;
+				LT_State = -1;
+			}
+			break;
+		}
+		case ResetGame:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData != ResetMC)
+			{
+				ResetState = NothingReset;
+			}
+			break;
+		}
+		default:
+		{
+			ResetState = NothingReset;
+			break;
+		}
+	}
+}
+
+void StartTask()
+{
+	switch(StartState)
+	{
+		case -1:
+		{
+			startTheGame = 0;
+			StartState = NothingStart;
+			break;
+		}
+		case NothingStart:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData == StartMC)
+			{
+				StartState = StartGame;
+				startTheGame = 1;
+			}
+			break;
+		}
+		case StartGame:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData != StartMC)
+			{
+				StartState = NothingStart;
+			}
+			break;
+		}
+		default:
+		{
+			startTheGame = 0;
+			StartState = NothingStart;
+			break;
+		}
+	}	
+}
+
+void EasyTask()
+{
+	switch(EasyState)
+	{
+		case -1:
+		{
+			easyMode = 0;
+			EasyState = NothingEasy;
+			break;
+		}
+		case NothingEasy:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData == EasyMC)
+			{
+				easyMode = 1;
+				EasyState = EasyGame;
+			}
+			break;
+		}
+		case EasyGame:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData != EasyMC)
+			{
+				EasyState = NothingEasy;
+			}
+			break;
+		}
+		default:
+		{
+			easyMode = 0;
+			EasyState = NothingEasy;
+			break;
+		}
+	}
+}
+
+void NormalTask()
+{
+	switch(NormalState)
+	{
+		case -1:
+		{
+			normalMode = 0;
+			NormalState = NothingNormal;
+			break;
+		}
+		case NothingNormal:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData == NormalMC)
+			{
+				normalMode = 1;
+				NormalState = NormalGame;
+			}
+			break;				
+		}
+		case NormalGame:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData != NormalMC)
+			{
+				NormalState = NothingNormal;
+			}
+			break;
+		}
+		default:
+		{
+			normalMode = 0;
+			NormalState = NothingNormal;
+			break;
+		}
+	}
+}
+
+void HardTask()
+{
+	switch(HardState)
+	{
+		case -1:
+		{
+			hardMode = 0;
+			HardState = NothingHard;
+			break;
+		}
+		case NothingHard:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData == NormalMC)
+			{
+				hardMode = 1;
+				HardState = HardGame;
+			}
+			break;
+		}
+		case HardGame:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData != NormalMC)
+			{
+				HardState = NothingHard;
+			}
+			break;
+		}
+		default:
+		{
+			hardMode = 0;
+			HardState = NothingHard;
+			break;
+		}
+	}
+}
+
+void LoseTask()
+{
+	switch(LoseState)
+	{
+		case -1:
+		{
+			lostGame = 0;
+			LoseState = NothingLose;
+			break;
+		}
+		case NothingLose:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData == LoseMC)
+			{
+				lostGame = 1;
+				LoseState = LoseGame;
+			}
+			break;
+		}
+		case LoseGame:
+		{
+			ReadData = (PINC&0xF);
+			if(ReadData != LoseMC)
+			{
+				LoseState = NothingLose;
+			}
+			break;
+		}
+		default:
+		{
+			lostGame = 0;
+			LoseState = NothingLose;
 			break;
 		}
 	}
@@ -228,9 +475,6 @@ void LCD_Cursor(unsigned char column ) {
 		LCD_WriteCmdStart(0xBF+column); // IEEE change this value to 0xBF+column
 	}
 }
-
-enum LI_States { LI_Init1, LI_Init2, LI_Init3, LI_Init4, LI_Init5, LI_Init6,
-	LI_WaitDisplayString, LI_Clr, LI_PositionCursor, LI_DisplayChar, LI_WaitGo0 } LI_State;
 
 void LI_Tick() {
 	static unsigned char i;
@@ -351,14 +595,12 @@ void LI_Tick() {
 
 // SynchSM for testing the LCD interface -- waits for button press, fills LCD with repeated random num
 
-enum LT_States { LT_s0, LT_WaitLcdRdy, LT_WaitButton, LT_FillAndDispString,
-LT_HoldGo1, LT_WaitBtnRelease } LT_State;
-
 void LT_Tick() {
 	static unsigned short j;
 	static unsigned char i, x, c;
 	switch(LT_State) { // Transitions
 		case -1:
+			x = 0;
 			LCD_counter = 74;
 			LT_State = LT_s0;
 			break;
@@ -459,6 +701,8 @@ void LT_Tick() {
 		case LT_WaitBtnRelease:
 			break;
 		default:
+			LCD_counter = 74;
+			x = 0;
 			break;
 	} // State actions
 }
@@ -474,7 +718,8 @@ int main(void)
 	//period for the tasks
 	unsigned long int LI_per = 5;
 	unsigned long int LT_per = 5;
-	unsigned long int ScoreTask_per = 1;
+	unsigned long int ScoreTask_per = 5;
+	unsigned long int ResetTask_per = 5;
 		
 	//Calculating GCD
 	unsigned long int tmpGCD = 1;
@@ -488,10 +733,11 @@ int main(void)
 	unsigned long int LI_period = LI_per/GCD;
 	unsigned long int LT_period = LT_per/GCD;
 	unsigned long int ScoreTask_period = ScoreTask_per/GCD;
+	unsigned long int ResetTask_period = ResetTask_per/GCD;
 	
 	//Declare an array of tasks
-	static task task1, task2, task3;
-	task *tasks[] = {&task1, &task2, &task3};
+	static task task1, task2, task3, task4;
+	task *tasks[] = {&task1, &task2, &task3, &task4};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	//Task 1
@@ -512,6 +758,12 @@ int main(void)
 	task3.elapsedTime = ScoreTask_period;
 	task3.TickFct = &ScoreTask;
 	
+	//Task4
+	task4.state = -1;
+	task4.period = ResetTask_period;
+	task4.elapsedTime = ResetTask_period;
+	task4.TickFct = &ResetTask;
+	
 	TimerSet(GCD);
 	TimerOn();
 
@@ -519,6 +771,7 @@ int main(void)
 	LI_State = -1;
 	LT_State = -1;
 	ScoreState = -1;
+	ResetState = -1;
 
 	while(1)
 	{
