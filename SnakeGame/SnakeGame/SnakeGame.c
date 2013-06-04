@@ -347,16 +347,22 @@ void GameTask()
 			{
 				gameTaskState = Easy;
 				easyEn = 1;
+				TransferData = EasyMC;
+				PORTD = TransferData;
 			}
 			else if(keyVal == Normal)
 			{
 				gameTaskState = Normal;
 				normalEn = 1;
+				TransferData = NormalMC;
+				PORTD = TransferData;
 			}
 			else if(keyVal == Hard)
 			{
 				gameTaskState = Hard;
 				hardEn = 1;
+				TransferData = HardMC;
+				PORTD = TransferData;
 			}
 			else if(keyVal == reset)
 			{
@@ -408,7 +414,7 @@ void GameTask()
 		}
 		case Lose:
 		{
-			TransferData = 0x0;
+			TransferData = LoseMC;
 			PORTD = TransferData;
 			easyEn = 0;
 			normalEn = 0;

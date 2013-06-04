@@ -356,7 +356,7 @@ void HardTask()
 		case NothingHard:
 		{
 			ReadData = (PINC&0xF);
-			if(ReadData == NormalMC)
+			if(ReadData == HardMC)
 			{
 				hardMode = 1;
 				HardState = HardGame;
@@ -366,7 +366,7 @@ void HardTask()
 		case HardGame:
 		{
 			ReadData = (PINC&0xF);
-			if(ReadData != NormalMC)
+			if(ReadData != HardMC)
 			{
 				HardState = NothingHard;
 			}
@@ -681,45 +681,128 @@ void LT_Tick() {
 		case LT_WaitButton:
 			break;
 		case LT_FillAndDispString:
-			++x;
-			if ((x%2)==1){
-			LCD_string_g[0] = 'W';
-			LCD_string_g[1] = 'e';
-			LCD_string_g[2] = 'l';
-			LCD_string_g[3] = 'c';
-			LCD_string_g[4] = 'o';
-			LCD_string_g[5] = 'm';
-			LCD_string_g[6] = 'e';
-			LCD_string_g[7] = ' ';
-			LCD_string_g[8] = 't';
-			LCD_string_g[9] = 'o';
-			LCD_string_g[10] = ' ';
-			LCD_string_g[11] = 'S';
-			LCD_string_g[12] = 'n';
-			LCD_string_g[13] = 'a';
-			LCD_string_g[14] = 'k';
-			LCD_string_g[15] = 'e';
-			LCD_string_g[16] = ' ';
-			}			
-			if ((x%2)==0){
-			LCD_string_g[0] = 'D';
-			LCD_string_g[1] = 'i';
-			LCD_string_g[2] = 'f';
-			LCD_string_g[3] = 'f';
-			LCD_string_g[4] = 'i';
-			LCD_string_g[5] = 'c';
-			LCD_string_g[6] = 'u';
-			LCD_string_g[7] = 'l';
-			LCD_string_g[8] = 't';
-			LCD_string_g[9] = 'y';
-			LCD_string_g[10] = ':';
-			LCD_string_g[11] = ' ';
-			LCD_string_g[12] = ' ';
-			LCD_string_g[13] = ' ';
-			LCD_string_g[14] = ' ';
-			LCD_string_g[15] = ' ';
-			LCD_string_g[16] = ' ';
-			}			
+			if(lostGame)
+			{
+				LCD_string_g[0] = 'G';
+				LCD_string_g[1] = 'a';
+				LCD_string_g[2] = 'm';
+				LCD_string_g[3] = 'e';
+				LCD_string_g[4] = ' ';
+				LCD_string_g[5] = 'O';
+				LCD_string_g[6] = 'v';
+				LCD_string_g[7] = 'e';
+				LCD_string_g[8] = 'r';
+				LCD_string_g[9] = ' ';
+				LCD_string_g[10] = ' ';
+				LCD_string_g[11] = ' ';
+				LCD_string_g[12] = ' ';
+				LCD_string_g[13] = ' ';
+				LCD_string_g[14] = ' ';
+				LCD_string_g[15] = ' ';
+				LCD_string_g[16] = ' ';
+			}
+			else if(easyMode)
+			{
+				LCD_string_g[0] = 'E';
+				LCD_string_g[1] = 'a';
+				LCD_string_g[2] = 's';
+				LCD_string_g[3] = 'y';
+				LCD_string_g[4] = ' ';
+				LCD_string_g[5] = 'M';
+				LCD_string_g[6] = 'o';
+				LCD_string_g[7] = 'd';
+				LCD_string_g[8] = 'e';
+				LCD_string_g[9] = ' ';
+				LCD_string_g[10] = ' ';
+				LCD_string_g[11] = ' ';
+				LCD_string_g[12] = ' ';
+				LCD_string_g[13] = ' ';
+				LCD_string_g[14] = ' ';
+				LCD_string_g[15] = ' ';
+				LCD_string_g[16] = ' ';
+			}
+			else if(normalMode)
+			{
+				LCD_string_g[0] = 'N';
+				LCD_string_g[1] = 'o';
+				LCD_string_g[2] = 'r';
+				LCD_string_g[3] = 'm';
+				LCD_string_g[4] = 'a';
+				LCD_string_g[5] = 'l';
+				LCD_string_g[6] = ' ';
+				LCD_string_g[7] = 'M';
+				LCD_string_g[8] = 'o';
+				LCD_string_g[9] = 'd';
+				LCD_string_g[10] = 'e';
+				LCD_string_g[11] = ' ';
+				LCD_string_g[12] = ' ';
+				LCD_string_g[13] = ' ';
+				LCD_string_g[14] = ' ';
+				LCD_string_g[15] = ' ';
+				LCD_string_g[16] = ' ';
+			}
+			else if(hardMode)
+			{
+				LCD_string_g[0] = 'H';
+				LCD_string_g[1] = 'a';
+				LCD_string_g[2] = 'r';
+				LCD_string_g[3] = 'd';
+				LCD_string_g[4] = ' ';
+				LCD_string_g[5] = 'M';
+				LCD_string_g[6] = 'o';
+				LCD_string_g[7] = 'd';
+				LCD_string_g[8] = 'e';
+				LCD_string_g[9] = ' ';
+				LCD_string_g[10] = ' ';
+				LCD_string_g[11] = ' ';
+				LCD_string_g[12] = ' ';
+				LCD_string_g[13] = ' ';
+				LCD_string_g[14] = ' ';
+				LCD_string_g[15] = ' ';
+				LCD_string_g[16] = ' ';
+			}
+			else
+			{
+				++x;
+				if ((x%2)==1){
+				LCD_string_g[0] = 'W';
+				LCD_string_g[1] = 'e';
+				LCD_string_g[2] = 'l';
+				LCD_string_g[3] = 'c';
+				LCD_string_g[4] = 'o';
+				LCD_string_g[5] = 'm';
+				LCD_string_g[6] = 'e';
+				LCD_string_g[7] = ' ';
+				LCD_string_g[8] = 't';
+				LCD_string_g[9] = 'o';
+				LCD_string_g[10] = ' ';
+				LCD_string_g[11] = 'S';
+				LCD_string_g[12] = 'n';
+				LCD_string_g[13] = 'a';
+				LCD_string_g[14] = 'k';
+				LCD_string_g[15] = 'e';
+				LCD_string_g[16] = ' ';
+				}
+				if ((x%2)==0){
+				LCD_string_g[0] = 'E';
+				LCD_string_g[1] = 'a';
+				LCD_string_g[2] = 's';
+				LCD_string_g[3] = 'y';
+				LCD_string_g[4] = '-';
+				LCD_string_g[5] = 'N';
+				LCD_string_g[6] = 'o';
+				LCD_string_g[7] = 'r';
+				LCD_string_g[8] = 'm';
+				LCD_string_g[9] = 'a';
+				LCD_string_g[10] = 'l';
+				LCD_string_g[11] = '-';
+				LCD_string_g[12] = 'H';
+				LCD_string_g[13] = 'a';
+				LCD_string_g[14] = 'r';
+				LCD_string_g[15] = 'd';
+				LCD_string_g[16] = ' ';
+				}
+			}				
 			LCD_go_g = 1; // Display string
 			break;
 		case LT_HoldGo1:
@@ -740,8 +823,8 @@ int main(void)
 	//DDRD = 0xFF; PORTD = 0x00;
 	
 	//period for the tasks
-	unsigned long int LI_per = 5;
-	unsigned long int LT_per = 5;
+	unsigned long int LI_per = 4;
+	unsigned long int LT_per = 2;
 	unsigned long int ScoreTask_per = 5;
 	unsigned long int ResetTask_per = 5;
 	unsigned long int StartTask_per = 5;
