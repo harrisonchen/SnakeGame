@@ -54,6 +54,79 @@ unsigned short block2 = (0x04 + 0x02);
 unsigned char lose;
 unsigned char win;
 
+enum Button_States {WaitSpeaker, PressedSpeaker, HeldSpeaker} Button_State;
+
+void Button_Func()
+{
+	switch(Button_State)
+	{
+		case -1:
+		{
+			Button_State = WaitSpeaker;
+			break;
+		}
+		case WaitSpeaker:
+		{
+			if((PIND&0x80) == 0x80)
+			{
+				Button_State = PressedSpeaker;
+			}
+			break;
+		}
+		case PressedSpeaker:
+		{
+			if((PIND&0x80) == 0x00)
+			{
+				Button_State = WaitSpeaker;
+			}
+			else
+			{
+				Button_State = HeldSpeaker;
+			}
+			break;
+		}
+		case HeldSpeaker:
+		{
+			if((PIND&0x80) == 0x00)
+			{
+				Button_State = WaitSpeaker;
+			}
+			else
+			{
+				Button_State = PressedSpeaker;
+			}
+			break;
+		}
+		default:
+		{
+			Button_State = WaitSpeaker;
+			break;
+		}
+	}
+	
+	switch(Button_State)
+	{
+		case WaitSpeaker:
+		{
+			break;
+		}
+		case PressedSpeaker:
+		{
+			PORTD = (PIND|0x80);
+			break;
+		}
+		case HeldSpeaker:
+		{
+			PORTD = (PIND&0x0F);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+}
+
 enum dir_states{up,down,left,right,reset} dir;//direction states
 	
 enum gameTaskStates{t1,t2,t3,t4,WaitGame,Start,Easy,Normal,Hard,Lose,Win,Clear}gameTaskState;//game states
@@ -237,7 +310,7 @@ void SnakeShiftGrowY()
 	SnakeArrayAdj();
 	//ScoreBoard();
 	TransferData = IncrementMC;
-	PORTD = TransferData;
+	PORTD = ((PIND&0x80) + TransferData);
 }
 
 void SnakeShiftGrowX()
@@ -247,7 +320,7 @@ void SnakeShiftGrowX()
 	SnakeArrayAdj();
 	//ScoreBoard();
 	TransferData = IncrementMC;
-	PORTD = TransferData;
+	PORTD = ((PIND&0x80) + TransferData);
 }
 
 void ColInit()
@@ -317,7 +390,7 @@ void GameTask()
 		case -1:
 		{
 			TransferData = 0x0;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -327,7 +400,7 @@ void GameTask()
 		case WaitGame:
 		{
 			TransferData = 0x0;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -335,7 +408,7 @@ void GameTask()
 			{
 				gameTaskState = Start;
 				TransferData = StartMC;
-				PORTD = TransferData;
+				PORTD = ((PIND&0x80) + TransferData);
 			}				
 			break;
 		}
@@ -348,21 +421,21 @@ void GameTask()
 				gameTaskState = Easy;
 				easyEn = 1;
 				TransferData = EasyMC;
-				PORTD = TransferData;
+				PORTD = ((PIND&0x80) + TransferData);
 			}
 			else if(keyVal == Normal)
 			{
 				gameTaskState = Normal;
 				normalEn = 1;
 				TransferData = NormalMC;
-				PORTD = TransferData;
+				PORTD = ((PIND&0x80) + TransferData);
 			}
 			else if(keyVal == Hard)
 			{
 				gameTaskState = Hard;
 				hardEn = 1;
 				TransferData = HardMC;
-				PORTD = TransferData;
+				PORTD = ((PIND&0x80) + TransferData);
 			}
 			else if(keyVal == reset)
 			{
@@ -373,7 +446,7 @@ void GameTask()
 		case Easy:
 		{
 			TransferData = 0x0;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
 			{
 				gameTaskState = Lose;
@@ -387,7 +460,7 @@ void GameTask()
 		case Normal:
 		{
 			TransferData = 0x0;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
 			{
 				gameTaskState = Lose;
@@ -401,7 +474,7 @@ void GameTask()
 		case Hard:
 		{
 			TransferData = 0x0;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
 			{
 				gameTaskState = Lose;
@@ -414,8 +487,9 @@ void GameTask()
 		}
 		case Lose:
 		{
+			PORTD = (PIND|0x80);
 			TransferData = LoseMC;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -428,7 +502,7 @@ void GameTask()
 		case Win:
 		{
 			TransferData = 0x0;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -449,7 +523,7 @@ void GameTask()
 		default:
 		{
 			TransferData = 0x0;
-			PORTD = TransferData;
+			PORTD = ((PIND&0x80) + TransferData);
 			easyEn = 0;
 			normalEn = 0;
 			hardEn = 0;
@@ -1181,7 +1255,7 @@ void GameOfSnakeHard()
 void ResetGame()
 {
 	TransferData = ResetMC;
-	PORTD = TransferData;
+	PORTD = ((PIND&0x80) + TransferData);
 	//gameTaskState = -1;
 	KeyState = -1;
 	GameStateEasy = -1;
@@ -1210,6 +1284,7 @@ int main(void)
 	unsigned long int GenerateFruit_per = 50;
 	unsigned long int GameOfSnakeNormal_per = 200;
 	unsigned long int GameOfSnakeHard_per = 200;
+	unsigned long int ButtonTick_per = 38;
 	
 	//Calculating GCD
 	unsigned long int tmpGCD;
@@ -1231,10 +1306,11 @@ int main(void)
 	unsigned long int GenerateFruit_period = GenerateFruit_per/GCD;
 	unsigned long int GameOfSnakeNormal_period = GameOfSnakeNormal_per/GCD;
 	unsigned long int GameOfSnakeHard_period = GameOfSnakeHard_per/GCD;
+	long double ButtonTick_period = ButtonTick_per/GCD;
 	
 	//Declare an array of tasks
-	static task task0, task1, task2, task3, task4, task5, task6;
-	task *tasks[] = {&task0, &task1, &task2, &task3, &task4, &task5, &task6};
+	static task task0, task1, task2, task3, task4, task5, task6, task7;
+	task *tasks[] = {&task0, &task1, &task2, &task3, &task4, &task5, &task6, &task7};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	//Task 0
@@ -1278,6 +1354,12 @@ int main(void)
 	task6.period = GameOfSnakeHard_period;
 	task6.elapsedTime = GameOfSnakeHard_period;
 	task6.TickFct = &GameOfSnakeHard;
+	
+	//Task 7
+	task7.state = -1;
+	task7.period = ButtonTick_period;
+	task7.elapsedTime = ButtonTick_period;
+	task7.TickFct = &Button_Func;
 
 	TimerSet(GCD);
 	TimerOn();
@@ -1303,7 +1385,6 @@ int main(void)
 			}
 			tasks[i]->elapsedTime += 1;
 		}
-		
 		while(!TimerFlag);
 		TimerFlag = 0;
 	}
