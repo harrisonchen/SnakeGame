@@ -1280,13 +1280,13 @@ int main(void)
 	DDRD = 0xFF; PORTD = 0x00;
 	
 	//period for the tasks
-	unsigned long int GameTask_per = 50;
-	unsigned long int Keypad_per = 50;
-	unsigned long int GameOfSnakeEasy_per = 400;
-	unsigned long int UpdateMatrix_per = 1;
-	unsigned long int GenerateFruit_per = 50;
-	unsigned long int GameOfSnakeNormal_per = 200;
-	unsigned long int GameOfSnakeHard_per = 200;
+	unsigned long int GameTask_per = 500;
+	unsigned long int Keypad_per = 500;
+	unsigned long int GameOfSnakeEasy_per = 4000;
+	unsigned long int UpdateMatrix_per = 10;
+	unsigned long int GenerateFruit_per = 500;
+	unsigned long int GameOfSnakeNormal_per = 2000;
+	unsigned long int GameOfSnakeHard_per = 2000;
 	unsigned long int ButtonTick_per = 38;
 	
 	//Calculating GCD
