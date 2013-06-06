@@ -112,12 +112,12 @@ void Button_Func()
 		}
 		case PressedSpeaker:
 		{
-			PORTD = (PIND|0x80);
+			PORTD = (PIND|0x40);
 			break;
 		}
 		case HeldSpeaker:
 		{
-			PORTD = (PIND&0x0F);
+			PORTD = (PIND&0xBF);
 			break;
 		}
 		default:
@@ -445,7 +445,7 @@ void GameTask()
 		}
 		case Easy:
 		{
-			PORTD = (PIND&0x7F);
+			PORTD = (PIND&0x3F);
 			TransferData = 0x0;
 			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
@@ -460,7 +460,7 @@ void GameTask()
 		}
 		case Normal:
 		{
-			PORTD = (PIND&0x7F);
+			PORTD = (PIND&0x3F);
 			TransferData = 0x0;
 			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
@@ -475,6 +475,7 @@ void GameTask()
 		}
 		case Hard:
 		{
+			PORTD = (PIND&0x3F);
 			TransferData = 0x0;
 			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
@@ -1257,6 +1258,7 @@ void GameOfSnakeHard()
 
 void ResetGame()
 {
+	PORTD = (PIND&0x3F);
 	TransferData = ResetMC;
 	PORTD = ((PIND&0x80) + TransferData);
 	//gameTaskState = -1;
@@ -1280,14 +1282,14 @@ int main(void)
 	DDRD = 0xFF; PORTD = 0x00;
 	
 	//period for the tasks
-	unsigned long int GameTask_per = 500;
-	unsigned long int Keypad_per = 500;
-	unsigned long int GameOfSnakeEasy_per = 4000;
-	unsigned long int UpdateMatrix_per = 10;
-	unsigned long int GenerateFruit_per = 500;
-	unsigned long int GameOfSnakeNormal_per = 2000;
-	unsigned long int GameOfSnakeHard_per = 2000;
-	unsigned long int ButtonTick_per = 38;
+	unsigned long int GameTask_per = 50;
+	unsigned long int Keypad_per = 50;
+	unsigned long int GameOfSnakeEasy_per = 400;
+	unsigned long int UpdateMatrix_per = 1;
+	unsigned long int GenerateFruit_per = 50;
+	unsigned long int GameOfSnakeNormal_per = 200;
+	unsigned long int GameOfSnakeHard_per = 200;
+	unsigned long int ButtonTick_per = 3;
 	
 	//Calculating GCD
 	unsigned long int tmpGCD;
