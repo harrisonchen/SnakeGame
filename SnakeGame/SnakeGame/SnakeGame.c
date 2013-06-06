@@ -445,6 +445,7 @@ void GameTask()
 		}
 		case Easy:
 		{
+			PORTD = (PIND&0x7F);
 			TransferData = 0x0;
 			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
@@ -459,6 +460,7 @@ void GameTask()
 		}
 		case Normal:
 		{
+			PORTD = (PIND&0x7F);
 			TransferData = 0x0;
 			PORTD = ((PIND&0x80) + TransferData);
 			if(lose)
@@ -732,6 +734,7 @@ void GenerateFruit()
 			if(fruitGone)
 			{
 				Fruit_Status = devoured;
+				PORTD = (PIND|0x80);
 			}
 			break;
 		}
