@@ -107,6 +107,7 @@ unsigned short Write7Seg(unsigned char x) {
 	}
 }
 
+///////// Score Count Function Update //////////
 void ScoreBoard()
 {
 	++score;
@@ -116,6 +117,7 @@ void ScoreBoard()
 	transmit_dataD1(~dataScore);
 }
 
+////////// All Controller States ///////////
 enum ScoreStates{NothingScore, IncrementScore}ScoreState;
 enum ResetStates{NothingReset, ResetGame}ResetState;
 enum StartStates{NothingStart, StartGame}StartState;
@@ -128,6 +130,7 @@ LI_WaitDisplayString, LI_Clr, LI_PositionCursor, LI_DisplayChar, LI_WaitGo0 } LI
 enum LT_States { LT_s0, LT_WaitLcdRdy, LT_WaitButton, LT_FillAndDispString,
 LT_HoldGo1, LT_WaitBtnRelease } LT_State;
 
+/////////////// Score Task Manager ///////////////
 void ScoreTask()
 {
 	switch(ScoreState)
@@ -182,6 +185,7 @@ void ScoreTask()
 	}
 }
 
+////////////// Reset Game Manager ////////////////
 void ResetTask()
 {
 	switch(ResetState)
@@ -229,6 +233,7 @@ void ResetTask()
 	}
 }
 
+////////////// Start Game Manager ////////////////
 void StartTask()
 {
 	switch(StartState)
@@ -267,6 +272,7 @@ void StartTask()
 	}	
 }
 
+////////////// Easy Mode Manager ////////////////
 void EasyTask()
 {
 	switch(EasyState)
@@ -305,6 +311,7 @@ void EasyTask()
 	}
 }
 
+////////////// Normal mode Manager ////////////////
 void NormalTask()
 {
 	switch(NormalState)
@@ -343,6 +350,7 @@ void NormalTask()
 	}
 }
 
+////////////// Hard mode Manager ////////////////
 void HardTask()
 {
 	switch(HardState)
@@ -381,6 +389,7 @@ void HardTask()
 	}
 }
 
+////////////// Lose Game Manager ////////////////
 void LoseTask()
 {
 	switch(LoseState)
@@ -443,6 +452,7 @@ unsigned long int findGCD(unsigned long int a, unsigned long int b) {
 return 0;
 }
 
+//////////// Task Structure ///////////////
 typedef struct _task {
 	signed char state;
 	unsigned long int period;
