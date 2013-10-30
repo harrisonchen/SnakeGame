@@ -18,45 +18,43 @@
 #include <ucr/timer.h>
 #include <stdio.h>
 
-//MICROCONTROLLER COMMUNICATION COMMANDS
+//MICROCONTROLLER COMMUNICATION SIGNALS
 unsigned char TransferData;
-unsigned char ResetMC = 0x1;
-unsigned char StartMC = 0x2;
-unsigned char EasyMC = 0x3;
-unsigned char NormalMC = 0x4;
-unsigned char HardMC = 0x5;
-unsigned char IncrementMC = 0x6;
-unsigned char LoseMC = 0x7;
+unsigned char ResetMC = 0x1; //reset game
+unsigned char StartMC = 0x2; //starts game
+unsigned char EasyMC = 0x3; //easy mode chosen
+unsigned char NormalMC = 0x4; //normal mode chosen
+unsigned char HardMC = 0x5; //hard mode chosen
+unsigned char IncrementMC = 0x6; //increment score count
+unsigned char LoseMC = 0x7; //lose game
 ////////////////////////////////////////
 
-unsigned char easyEn;
-unsigned char normalEn;
-unsigned char hardEn;
+unsigned char easyEn; //bool for easy mode enabling
+unsigned char normalEn; //bool for normal mode enabling
+unsigned char hardEn; //bool for hard mode enabling
 unsigned char matrixRowPosition;
 unsigned char matrixColPosition;
-unsigned char rNext;
-unsigned char cNext;
+unsigned char rNext; //next row position
+unsigned char cNext; //next colomn position
 unsigned char x, keyVal;//for keypad functions
-unsigned char fruitGone;
-unsigned char fruitRow;
-unsigned char fruitCol;
+unsigned char fruitGone; //bool for whether fruit was ate by snake
+unsigned char fruitRow; //row position for fruit
+unsigned char fruitCol; //col position for fruit
 unsigned char change;//seed for random function. it gets incremented.
-unsigned char rowSnake[8];
-unsigned char rowFruit[8];
-unsigned char col[8];
-// unsigned char score = 0;
-// unsigned short score1;
-// unsigned short score2;
-//unsigned short dataScore;
-unsigned short dataSnakeFruit;
-unsigned short block1 = (0x40 + 0x20);
-unsigned short block2 = (0x04 + 0x02);
-unsigned char lose;
-unsigned char win;
+unsigned char rowSnake[8]; //array storage of all row positions of snake corresponding to column
+unsigned char rowFruit[8]; //array storage of all row positions of fruit corresponding to column
+unsigned char col[8]; //holds column values
 
+unsigned short dataSnakeFruit; //array storage for outputting both snake and fruit row positions combined
+unsigned short block1 = (0x40 + 0x20); //hard mode block row positions
+unsigned short block2 = (0x04 + 0x02); //second block
+unsigned char lose; //bool for lose
+unsigned char win; //bool for win
+
+///////////////////////////////// Speaker Controller //////////////////////////////////////
 enum Button_States {WaitSpeaker, PressedSpeaker, HeldSpeaker} Button_State;
 
-void Button_Func()
+void Speaker_Func()
 {
 	switch(Button_State)
 	{
@@ -127,6 +125,7 @@ void Button_Func()
 	}
 }
 
+/////////////////////////////// KeyPad Multiplexer ///////////////////////////////////
 enum dir_states{up,down,left,right,reset} dir;//direction states
 	
 enum gameTaskStates{t1,t2,t3,t4,WaitGame,Start,Easy,Normal,Hard,Lose,Win,Clear}gameTaskState;//game states
@@ -159,7 +158,7 @@ if (GetBit(PINC,0)==0) { return('1'); }
 	// ... *****FINISH*****
 
 	// Check keys in col 4	
-	PORTC = 0x7F; // Enable col 6 with 0, disable others with 1’s
+	PORTC = 0x7F; // Enable col 7 with 0, disable others with 1’s
 	asm("nop"); // add a delay to allow PORTC to stabilize before checking
 	if (GetBit(PINC,0)==0) { return('A'); }
 	if (GetBit(PINC,1)==0) { return('B'); }
@@ -171,6 +170,7 @@ if (GetBit(PINC,0)==0) { return('1'); }
 
 }
 
+/////////////////////////////// KeyPad Decoder ////////////////////////////////////
 enum KeyStates {Wait, Pressed, Released} KeyState;
 
 void KeyOut(unsigned char in)
@@ -198,6 +198,7 @@ void KeyOut(unsigned char in)
 	}
 }
 
+/////////////////////////////// KeyPad Controller ////////////////////////////////
 void GetKeyPress()
 {
 	switch(KeyState)
@@ -237,6 +238,7 @@ void GetKeyPress()
 	}
 }
 
+////////////////////////////// Snake Structure //////////////////////////////////
 typedef struct _Snake
 {
 	unsigned char rowPos;
@@ -244,12 +246,13 @@ typedef struct _Snake
 	unsigned char size;
 } Snake;
 
-Snake snakeBody[64];
+Snake snakeBody[64]; //array for all snake positions both row and column
 Snake snakeBodyTemp[64]; //for array adjustment function copy
-Snake snakeHead;
-Snake snakeTail;
+Snake snakeHead; //head of snake positon
+Snake snakeTail; //tail of snake position
 Snake snakeHold; //for shifting snake position array
-
+ 
+/////////////////////////// GCD Function //////////////////////////////////
 unsigned long int findGCD(unsigned long int a, unsigned long int b)
 {
 	unsigned long int c;
@@ -263,13 +266,15 @@ unsigned long int findGCD(unsigned long int a, unsigned long int b)
 	return 0;
 }
 
+//////////////////////////// Task Structure ////////////////////////////////
 typedef struct _task {
-	signed char state;
-	unsigned long int period;
-	unsigned long int elapsedTime;
+	signed char state; //current state
+	unsigned long int period; //time period
+	unsigned long int elapsedTime; //time passed since last period
 	int (*TickFct) (int);
 } task;
 
+//////////////////////////// Snake Position Adjustment Function/////////////////////
 void SnakeArrayAdj()
 {
 	(snakeBodyTemp->size) = 1;
@@ -291,19 +296,22 @@ void SnakeArrayAdj()
 	RowRegister();
 }
 
+///////////////////////////// Shift Snake Row Function ///////////////////////////
 void SnakeShiftY()
 {
 	snakeHead.rowPos = rNext;
 	SnakeArrayAdj();
 }
 
+//////////////////////////// Shift Snake Col Function ////////////////////////////
 void SnakeShiftX()
 {
 	snakeHead.colPos = cNext;
 	SnakeArrayAdj();
 }
 
-void SnakeShiftGrowY()
+//////////////////////////// Add Snake Head Function and Score ///////////////////
+void SnakeShiftGrowY()//When snake eats apple up or down
 {
 	(snakeBody->size)++;
 	snakeHead.rowPos = rNext;
@@ -313,7 +321,8 @@ void SnakeShiftGrowY()
 	PORTD = ((PIND&0x80) + TransferData);
 }
 
-void SnakeShiftGrowX()
+//////////////////////////// Add Snake Head Function and Score ///////////////////
+void SnakeShiftGrowX()//When snake eats apple left or right
 {
 	(snakeBody->size)++;
 	snakeHead.colPos = cNext;
@@ -323,6 +332,7 @@ void SnakeShiftGrowX()
 	PORTD = ((PIND&0x80) + TransferData);
 }
 
+///////////////////////// Column Value Initializer ////////////////////////////
 void ColInit()
 {
 	col[0] = 0x01;
@@ -335,6 +345,7 @@ void ColInit()
 	col[7] = 0x80;
 }
 
+//////////////////////////// Row Value Initializer ////////////////////////////
 void RowInit()
 {
 	for(int i = 0; i < 8; ++i)
@@ -344,6 +355,7 @@ void RowInit()
 	}
 }
 
+/////// Storage for all row positions for both snake and apple /////////
 void RowRegister()
 {
 	RowInit();
@@ -364,6 +376,7 @@ void RowRegister()
 	}
 }
 
+//////////// Check Function for if next position is the Snake itself //////////////
 int isOwnSnake()
 {
 	for(int i = 0; i < (snakeBody->size); ++i)
@@ -383,6 +396,7 @@ int isOwnSnake()
 	return 0;
 }
 
+//////////////////// Game Task Manager //////////////////////
 void GameTask()
 {
 	switch(gameTaskState)
@@ -517,8 +531,6 @@ void GameTask()
 		}
 		case Clear:
 		{
-			//TransferData = 0x0;
-			//PORTD = TransferData;
 			ResetGame();
 			gameTaskState = WaitGame;
 			break;
@@ -536,6 +548,7 @@ void GameTask()
 	}		
 }
 
+//////////////////////// Update Snake Manager ///////////////////////////
 void UpdateSnakePos()
 {
 	if((keyVal == up) ||(keyVal == down) ||(keyVal == left) ||(keyVal == right))
@@ -544,14 +557,6 @@ void UpdateSnakePos()
 	}
 	switch(dir)
 	{
-		/*case -1:
-		{
-			(snakeBody->size) = 1;
-			(snakeBody[0].rowPos) = 0x08;
-			(snakeBody[0].colPos) = ~(0x10);
-			snakeHead = snakeBody[0];
-			break;
-		}*/
 		case up:
 		{
 			rNext = (snakeBody[0].rowPos) << 1;
@@ -681,6 +686,7 @@ void UpdateSnakePos()
 	}
 }
 
+////////////////////// Bool Function to check if new fruit position is on snake ///////////////////////
 int isSnakeThere()
 {
 	for(int i = 0; i < (snakeBody->size); ++i)
@@ -709,6 +715,7 @@ int isSnakeThere()
 	return 0;
 }
 
+////////////////////////////// Fruit Position Controller ///////////////////////////////////////
 enum Fruit_States{fresh,devoured} Fruit_Status;
 
 void GenerateFruit()
@@ -793,6 +800,7 @@ void GenerateFruit()
 	}
 }
 
+//////////////////////// Matrix Update Controller //////////////////////////////////
 enum UpdateStates{col1, col2, col3, col4, col5, col6, col7, col8, LOST,wait1,wait2,wait3,wait4,wait5,wait6,wait7,wait8,} UpdateState;
 
 void UpdateMatrix()
@@ -1071,6 +1079,7 @@ void UpdateMatrix()
 	}
 }
 
+/////////////// Send Data to Shift Register on Port A /////////////////
 void transmit_dataA1(unsigned short data) //transmit 8bits using PORTA 0 to 3
 {
 	int i;
@@ -1084,6 +1093,7 @@ void transmit_dataA1(unsigned short data) //transmit 8bits using PORTA 0 to 3
 	PORTA = 0x00;
 }
 
+/////////////// Send Data to Shift Register on Port B ////////////////
 void transmit_dataB1(unsigned char data)
 {
 	int i;
@@ -1097,6 +1107,7 @@ void transmit_dataB1(unsigned char data)
 	PORTB = 0x00;
 }
 
+///////////////////// Easy Mode Controller/////////////////////
 enum GameStatesEasy{updateSnakePosEasy} GameStateEasy;
 
 void GameOfSnakeEasy()
@@ -1150,6 +1161,7 @@ void GameOfSnakeEasy()
 	}
 }
 
+///////////////////// Normal Mode Controller/////////////////////
 enum GameStatesNormal{updateSnakePosNormal} GameStateNormal;
 
 void GameOfSnakeNormal()
@@ -1203,6 +1215,7 @@ void GameOfSnakeNormal()
 	}
 }
 
+///////////////////// Hard Mode Controller/////////////////////
 enum GameStatesHard{updateSnakePosHard} GameStateHard;
 
 void GameOfSnakeHard()
@@ -1256,6 +1269,7 @@ void GameOfSnakeHard()
 	}
 }
 
+/////////////////// Reset Game Function ////////////////////
 void ResetGame()
 {
 	PORTD = (PIND&0x3F);
@@ -1289,7 +1303,7 @@ int main(void)
 	unsigned long int GenerateFruit_per = 50;
 	unsigned long int GameOfSnakeNormal_per = 200;
 	unsigned long int GameOfSnakeHard_per = 200;
-	unsigned long int ButtonTick_per = 3;
+	unsigned long int SpeakerTick_per = 3;
 	
 	//Calculating GCD
 	unsigned long int tmpGCD;
@@ -1311,7 +1325,7 @@ int main(void)
 	unsigned long int GenerateFruit_period = GenerateFruit_per/GCD;
 	unsigned long int GameOfSnakeNormal_period = GameOfSnakeNormal_per/GCD;
 	unsigned long int GameOfSnakeHard_period = GameOfSnakeHard_per/GCD;
-	long double ButtonTick_period = ButtonTick_per/GCD;
+	long double SpeakerTick_period = SpeakerTick_per/GCD;
 	
 	//Declare an array of tasks
 	static task task0, task1, task2, task3, task4, task5, task6, task7;
@@ -1362,9 +1376,9 @@ int main(void)
 	
 	//Task 7
 	task7.state = -1;
-	task7.period = ButtonTick_period;
-	task7.elapsedTime = ButtonTick_period;
-	task7.TickFct = &Button_Func;
+	task7.period = SpeakerTick_period;
+	task7.elapsedTime = SpeakerTick_period;
+	task7.TickFct = &Speaker_Func;
 
 	TimerSet(GCD);
 	TimerOn();
@@ -1381,7 +1395,7 @@ int main(void)
 
 	while(1)
 	{
-		for (i=0; i < numTasks; i++) 
+		for (i=0; i < numTasks; i++)
 		{
 			if (tasks[i]->elapsedTime == tasks[i]->period)
 			{
